@@ -1,0 +1,21 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Logs / temp
+*.log
+tmp/
+.tmp/
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Node (not used today, but future-proofing if a build step is ever added)
+node_modules/
+
+# Note: sample-data.json and load-sample-data.html are intentionally committed
+# (handy demo/test data; the loader only writes to localStorage).

@@ -1,0 +1,733 @@
+/* ============================================================
+   Travel Planner - styles
+   Design tokens + mobile-first layout, light/dark themes.
+   ============================================================ */
+
+/* ---- Design tokens ---------------------------------------- */
+:root {
+  /* palette */
+  --primary: #0f8a7e;
+  --primary-strong: #0a6459;
+  --primary-soft: #d7efe9;
+  --accent: #f2994a;
+  --accent-soft: #fdecdb;
+  --accent-strong: #b4610f;
+
+  /* brand gradient (sidebar / hero) */
+  --brand-grad: linear-gradient(160deg, #0f8a7e 0%, #0a6459 55%, #0b4f6c 100%);
+  --brand-grad-warm: linear-gradient(135deg, #14a08f 0%, #0f8a7e 60%, #0b4f6c 100%);
+  --brand-grad-accent: linear-gradient(120deg, #0a6459 0%, #0f8a7e 45%, #c26f22 100%);
+
+  --bg: #eef2f3;
+  --surface: #ffffff;
+  --surface-2: #eef1f3;
+  --text: #14211f;
+  --text-light: #4f5d62;
+  --muted: #667479;
+  --border: #dde3e6;
+
+  --danger: #c2453d;
+  --success: #2e8b57;
+
+  /* spacing scale */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+
+  /* radius + elevation */
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow-1: 0 1px 2px rgba(20, 40, 45, 0.08), 0 1px 3px rgba(20, 40, 45, 0.06);
+  --shadow-2: 0 4px 12px rgba(20, 40, 45, 0.12);
+
+  /* type */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --fs-xs: 0.72rem;
+  --fs-sm: 0.85rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.2rem;
+  --fs-xl: 1.5rem;
+
+  /* motion */
+  --t-fast: 130ms;
+  --t-mid: 190ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --tabbar-h: 60px;
+  --topbar-h: 56px;
+}
+
+:root[data-theme="dark"] {
+  --primary: #35b3a0;
+  --primary-strong: #58c9b8;
+  --primary-soft: #12332e;
+  --accent: #f0985a;
+  --accent-soft: #3a2a1a;
+  --accent-strong: #f0985a;
+
+  --bg: #12181a;
+  --surface: #1b2427;
+  --surface-2: #222d31;
+  --text: #e8eef0;
+  --text-light: #b3c0c5;
+  --muted: #93a1a6;
+  --border: #2c383c;
+
+  --danger: #e5726a;
+  --success: #57c98a;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* Follow OS preference when the user hasn't chosen manually */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+  }
+}
+
+/* ---- Reset / base ----------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+html { font-size: 100%; transition: font-size var(--t-mid) var(--ease); }
+/* Collapsed sidebar (desktop) zooms the whole UI up a notch (rem-based). */
+:root.nav-collapsed { font-size: 108.5%; }
+
+/* Smooth fade when switching light/dark. Applied broadly to elements that
+   carry theme colours; kept to colour/background/border so layout doesn't
+   animate. Disabled under prefers-reduced-motion (see the block near the end). */
+body, .topbar, .tabbar, .main, .card, .modal, .btn, .chip, .tab, .subtab,
+.seg, .seg-btn, .person-row, .palette-swatch, .status-badge, .note,
+input, textarea, select, .brand-footer, .brand-footer-mobile, .hero {
+  transition: background-color var(--t-mid) var(--ease),
+              color var(--t-mid) var(--ease),
+              border-color var(--t-mid) var(--ease);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { margin: 0 0 var(--sp-3); line-height: 1.25; }
+p { margin: 0 0 var(--sp-3); }
+
+button { font: inherit; cursor: pointer; }
+
+/* Base :focus fallback for engines lacking :focus-visible support. */
+:focus {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+/* Modern engines: only show the ring for keyboard focus, not mouse clicks. */
+:focus:not(:focus-visible) { outline: none; }
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--sp-2); top: -3rem;
+  background: var(--primary); color: #fff;
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm);
+  z-index: 50; transition: top var(--t-fast) var(--ease);
+}
+.skip-link:focus { top: var(--sp-2); }
+
+/* ---- App shell -------------------------------------------- */
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* room for the fixed bottom tab bar + the fixed mobile brand footer */
+  padding-bottom: calc(var(--tabbar-h) + 52px + env(safe-area-inset-bottom, 0));
+}
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--topbar-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--sp-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-title {
+  margin: 0; font-size: var(--fs-lg); font-weight: 800;
+  display: flex; align-items: center; gap: var(--sp-2);
+  letter-spacing: -0.01em;
+}
+.topbar-mark { color: var(--primary); font-size: 1.15em; }
+.topbar-actions { display: flex; gap: var(--sp-1); }
+
+/* Sidebar brand block + Data section (desktop only; hidden on mobile) */
+.nav-brand { display: none; }
+.nav-brand-mark {
+  width: 36px; height: 36px; border-radius: 10px; flex: none;
+  display: grid; place-items: center; font-size: 1.2rem;
+  background: var(--brand-grad); color: #fff;
+  box-shadow: var(--shadow-1);
+}
+.nav-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.nav-brand-name { font-weight: 800; font-size: 0.98rem; color: var(--text); letter-spacing: -0.02em; }
+.nav-brand-tag { font-size: 0.68rem; color: var(--text-light); white-space: nowrap; }
+.nav-collapse { display: none; }
+.nav-group-data, .nav-section-label, .nav-action { display: none; }
+/* Sidebar sub-nav (Domestic/International) is desktop-only */
+.nav-subnav { display: none; }
+
+/* On-screen segmented filter (works on all screen sizes) */
+.seg {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--surface-2); border-radius: 999px;
+  margin-bottom: var(--sp-4); flex-wrap: wrap;
+}
+.seg-btn {
+  border: none; background: transparent; color: var(--text-light);
+  padding: var(--sp-2) var(--sp-4); border-radius: 999px;
+  font-size: var(--fs-sm); font-weight: 600; min-height: 38px;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.seg-btn:hover { color: var(--accent-strong); }
+.seg-btn.is-active { background: var(--surface); color: var(--primary-strong); box-shadow: var(--shadow-1); border-bottom: 2px solid var(--accent); }
+
+.icon-btn {
+  border: none; background: transparent; color: var(--text-light);
+  width: 40px; height: 40px; border-radius: 50%;
+  font-size: 1.2rem; display: grid; place-items: center;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+.main { flex: 1; padding: var(--sp-4); max-width: 900px; width: 100%; margin: 0 auto; }
+.view[hidden] { display: none; }
+
+/* ---- Tab bar (mobile) -> sidebar (wide) ------------------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0));
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  display: flex; background: var(--brand-grad);
+  border-top: none; box-shadow: 0 -2px 12px rgba(11, 79, 108, 0.18);
+}
+/* mobile: brand block and Data group are part of the sidebar only */
+.tabbar .nav-brand,
+.tabbar .nav-group-data { display: none; }
+.tabbar .nav-group,
+.tabbar .nav-item { display: contents; }
+.tab {
+  flex: 1; border: none; background: transparent; color: rgba(255, 255, 255, 0.82);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; font-size: 0.78rem; min-height: 44px;
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.tab-icon { font-size: 1.25rem; }
+.tab[aria-current="page"] { color: #fff; font-weight: 700; box-shadow: inset 0 3px 0 var(--accent); }
+.tab[aria-current="page"] .tab-icon { transform: translateY(-1px); }
+.tab:hover { color: #fff; }
+
+/* ---- Buttons / controls ----------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--radius);
+  font-size: var(--fs-sm); font-weight: 600; min-height: 44px;
+  transition: transform var(--t-fast) var(--ease),
+              box-shadow var(--t-fast) var(--ease),
+              background var(--t-fast) var(--ease);
+}
+.btn:hover { box-shadow: var(--shadow-2); transform: translateY(-1px) scale(1.03); }
+.btn:active { transform: translateY(0) scale(0.99); }
+.btn-block:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-strong); }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--primary); }
+.btn-danger { color: var(--danger); border-color: transparent; background: transparent; }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.btn-sm { padding: var(--sp-2) var(--sp-3); min-height: 36px; font-size: var(--fs-xs); }
+.btn-block { width: 100%; justify-content: center; }
+
+label { display: block; font-size: var(--fs-sm); font-weight: 600; margin-bottom: var(--sp-1); }
+input[type="text"], input[type="date"], input[type="number"], input[type="search"], textarea, select {
+  width: 100%; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: var(--sp-3); min-height: 44px;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none;
+}
+textarea { min-height: 80px; resize: vertical; }
+.field { margin-bottom: var(--sp-4); }
+.field-row { display: flex; gap: var(--sp-3); }
+.field-row > * { flex: 1; }
+
+/* ---- Cards / layout bits ---------------------------------- */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: var(--sp-4);
+  box-shadow: var(--shadow-1); margin-bottom: var(--sp-3);
+  transition: transform var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease),
+              border-color var(--t-mid) var(--ease);
+}
+/* Coloured left accent bar + hover lift - shared by all entity cards so
+   travellers, presets and trips look/feel identical. */
+.card-link, .entity-card {
+  position: relative; padding-left: calc(var(--sp-4) + 4px);
+}
+.card-link::before, .entity-card::before {
+  content: ""; position: absolute; left: 0; top: var(--sp-4); bottom: var(--sp-4);
+  width: 4px; border-radius: 4px; background: var(--primary);
+  opacity: 0.55; transition: opacity var(--t-mid) var(--ease);
+}
+.card-link { cursor: pointer; }
+.card-link:hover, .entity-card:hover {
+  transform: translateY(-2px); box-shadow: var(--shadow-2);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+}
+.card-link:hover::before, .entity-card:hover::before { opacity: 1; }
+
+/* Trip sections (Domestic / International) */
+.trip-section { margin-bottom: var(--sp-5); }
+.trip-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--sp-3); margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2); border-bottom: 1px solid var(--border);
+}
+.trip-section-head h3 { margin: 0; font-size: var(--fs-lg); }
+
+/* Status badge on trip cards */
+.status-badge {
+  flex: none; font-size: var(--fs-xs); font-weight: 700;
+  padding: 3px var(--sp-2); border-radius: 999px; white-space: nowrap;
+}
+.status-upcoming { background: var(--accent-soft); color: #703a08; }
+.status-ongoing { background: var(--primary-soft); color: var(--primary-strong); }
+.status-completed { background: var(--surface-2); color: var(--muted); }
+.status-planning { background: var(--surface-2); color: var(--text-light); }
+.card.is-completed { opacity: 0.72; }
+.card.is-completed:hover { opacity: 1; }
+
+/* Shared card grid (trips, travellers, packing presets) - consistent layout */
+.card-grid { display: flex; flex-direction: column; gap: var(--sp-3); }
+.card-grid .card { margin-bottom: 0; }
+@media (min-width: 720px) {
+  .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); }
+}
+/* back-compat alias */
+.trip-grid { display: flex; flex-direction: column; gap: var(--sp-3); }
+.trip-grid .card { margin-bottom: 0; }
+@media (min-width: 720px) {
+  .trip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); }
+}
+
+.view-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-3); margin-bottom: var(--sp-4);
+}
+.view-head h2 { margin: 0; font-size: var(--fs-xl); letter-spacing: -0.02em; }
+
+/* Hero band for a list view header */
+.hero {
+  background: var(--brand-grad-accent); color: #fff;
+  border-radius: var(--radius-lg); padding: var(--sp-5);
+  margin-bottom: var(--sp-5); box-shadow: var(--shadow-2);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-4); position: relative; overflow: hidden;
+}
+.hero::after {
+  content: "\2708"; position: absolute; right: -8px; top: -14px;
+  font-size: 7rem; opacity: 0.12; transform: rotate(18deg);
+  pointer-events: none;
+}
+.hero-text h2 { margin: 0 0 var(--sp-1); font-size: var(--fs-xl); color: #fff; }
+.hero-text p { margin: 0; color: rgba(255, 255, 255, 0.85); font-size: var(--fs-sm); }
+.hero .btn {
+  background: #fff; color: var(--primary-strong); border-color: #fff;
+  position: relative; z-index: 1; white-space: nowrap;
+}
+.hero .btn:hover { background: var(--accent-soft); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  background: var(--surface-2); color: var(--text-light);
+  border-radius: 999px; padding: 2px var(--sp-3); font-size: var(--fs-xs);
+}
+.chip-primary { background: var(--primary-soft); color: var(--primary-strong); }
+/* Interactive chips (rendered as <button>) get emboss + zoom feedback */
+button.chip {
+  border: none; cursor: pointer;
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+              background var(--t-fast) var(--ease);
+}
+button.chip:hover { transform: scale(1.06); box-shadow: var(--shadow-1); background: var(--accent-soft); color: var(--accent-strong); }
+button.chip:active { transform: scale(0.98); background: var(--accent); color: #fff; }
+
+.meta { color: var(--text-light); font-size: var(--fs-sm); }
+.stack > * + * { margin-top: var(--sp-3); }
+
+/* Empty / loading / error states */
+.state {
+  text-align: center; color: var(--text-light);
+  padding: var(--sp-6) var(--sp-4);
+}
+.state-icon { font-size: 2.5rem; display: block; margin-bottom: var(--sp-3); opacity: 0.7; }
+.state-error { color: var(--danger); }
+
+/* ---- Back link -------------------------------------------- */
+.back-link {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  background: none; border: none; color: var(--primary);
+  font-weight: 600; padding: var(--sp-2) 0; margin-bottom: var(--sp-2);
+}
+
+/* ---- Modal ------------------------------------------------ */
+.modal-root {
+  position: fixed; inset: 0; z-index: 40;
+  display: grid; place-items: center;
+  background: rgba(10, 20, 22, 0.55); padding: var(--sp-4);
+}
+.modal-root[hidden] { display: none; }
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2); width: 100%; max-width: 460px;
+  max-height: 90vh; overflow: auto; padding: var(--sp-5);
+  animation: pop var(--t-mid) var(--ease);
+}
+.modal h3 { font-size: var(--fs-lg); }
+.modal-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; margin-top: var(--sp-4); }
+@keyframes pop { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---- Brand footer (Powered by Forje) ---------------------- */
+/* Credit text centred across the FULL sidebar width; toggle floats at the
+   far-left (out of flow) so it doesn't push the text off-centre. */
+.brand-footer {
+  position: relative;
+  color: var(--text-light);
+  font-size: var(--fs-xs); line-height: 1.5;
+}
+.brand-footer .theme-toggle-btn {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+}
+.brand-footer .theme-toggle-btn:hover { transform: translateY(-50%) scale(1.1); }
+.brand-footer-text { display: block; text-align: center; }
+.brand-footer-line { display: block; }
+.brand-footer-line { color: var(--primary); font-weight: 600; letter-spacing: 0.2px; }
+.brand-footer-copy { opacity: 0.85; }
+
+/* Subtle inline theme toggle, sized to sit within the sidebar edge */
+.theme-toggle-btn {
+  flex: none; width: 28px; height: 28px; border-radius: 50%;
+  border: none; background: transparent; color: var(--text-light);
+  display: grid; place-items: center; font-size: 0.95rem; cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
+}
+.theme-toggle-btn:hover { background: var(--surface-2); color: var(--accent-strong); transform: scale(1.1); }
+
+/* Mobile: fixed above the bottom tab bar; hidden on desktop.
+   Desktop: the sidebar footer shows; the mobile one is hidden. */
+.brand-footer-mobile {
+  position: fixed; left: 0; right: 0;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0));
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--bg); border-top: 1px solid var(--border);
+  z-index: 15;
+  color: var(--text-light); font-size: var(--fs-xs); line-height: 1.5;
+  display: flex; flex-direction: column; align-items: center; gap: 0.05rem;
+  text-align: center;
+}
+/* The sidebar (desktop) footer lives in .nav-group-data, hidden on mobile. */
+.nav-group-data .brand-footer { display: none; }
+
+/* Inline note / banner (e.g. weather status) */
+.note {
+  background: var(--primary-soft); color: var(--primary-strong);
+  border-radius: var(--radius-sm); padding: var(--sp-3);
+  font-size: var(--fs-sm); margin-bottom: var(--sp-3);
+}
+.field-hint { color: var(--muted); font-size: var(--fs-xs); margin-top: 2px; }
+
+/* ---- Palette picker (Appearance) -------------------------- */
+.palette-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2); margin-top: var(--sp-3);
+}
+@media (min-width: 560px) {
+  .palette-grid { grid-template-columns: repeat(6, 1fr); }
+}
+.palette-swatch {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-2); border-radius: var(--radius);
+  border: 2px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: var(--fs-xs); font-weight: 600;
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
+}
+.palette-swatch { position: relative; }
+.palette-swatch:hover { transform: translateY(-2px) scale(1.03); box-shadow: var(--shadow-1); }
+.palette-swatch.is-active {
+  border-color: var(--primary); border-width: 2px;
+  box-shadow: 0 0 0 2px var(--primary-soft), 0 0 0 3px var(--primary);
+}
+.palette-check {
+  position: absolute; top: 4px; right: 4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: grid; place-items: center; font-size: 0.7rem; font-weight: 700;
+  box-shadow: var(--shadow-1);
+}
+.palette-dots { display: flex; gap: 3px; }
+.palette-dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.palette-name { color: var(--text-light); }
+
+/* ---- Compact "Add +" pill (next to section headings) ------ */
+.add-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  border: 1px solid var(--primary); background: var(--primary-soft);
+  color: var(--primary-strong); border-radius: 999px;
+  padding: 3px var(--sp-3); font-size: var(--fs-xs); font-weight: 700;
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+              background var(--t-fast) var(--ease);
+}
+.add-pill:hover { transform: scale(1.06); box-shadow: var(--shadow-1); background: var(--accent); border-color: var(--accent); color: #fff; }
+.add-pill:active { transform: scale(0.98); }
+.add-pill-plus { font-size: 0.95rem; line-height: 1; }
+
+/* ---- Consistent entity cards (travellers, presets, trips) - */
+.entity-card { display: flex; flex-direction: column; }
+.entity-head { display: flex; align-items: center; gap: var(--sp-2); }
+.entity-title {
+  flex: 1; min-width: 0; font-size: var(--fs-md); font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.entity-actions { display: inline-flex; gap: var(--sp-1); flex: none; }
+.entity-icon { flex: none; font-size: 1.15rem; }
+.person-avatar {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 0.85rem; font-weight: 700;
+  background: var(--primary-soft); color: var(--primary-strong);
+}
+.icon-btn-sm {
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: transparent; color: var(--text-light); font-size: 0.85rem;
+  display: grid; place-items: center; line-height: 1;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
+}
+/* On touch devices, expand small icon hit-areas toward the 44px guideline.
+   (!important overrides the inline width/height on the trip-detail icon buttons.) */
+@media (pointer: coarse) {
+  .icon-btn-sm { width: 44px; height: 44px; }
+  .entity-actions { gap: var(--sp-2); }
+  .icon-btn { min-width: 44px !important; min-height: 44px !important; }
+}
+.icon-btn-sm:hover { background: var(--surface-2); color: var(--text); transform: scale(1.12); }
+.icon-btn-danger:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+
+/* ---- Trip summary (printable itinerary) ------------------- */
+.summary-title { font-size: var(--fs-xl); margin-bottom: var(--sp-1); }
+.summary-h {
+  margin: var(--sp-4) 0 var(--sp-2); padding-bottom: var(--sp-1);
+  border-bottom: 2px solid var(--primary); color: var(--primary-strong);
+  font-size: var(--fs-md);
+}
+.summary-line { margin: 0 0 var(--sp-2); }
+.summary-day {
+  display: grid; grid-template-columns: 110px 1fr; gap: var(--sp-3);
+  padding: var(--sp-2) 0; border-top: 1px solid var(--border);
+}
+.summary-day-date { font-weight: 600; color: var(--text-light); }
+.summary-day-body > div { margin-bottom: 2px; }
+
+@media print {
+  .summary { box-shadow: none; border: none; padding: 0; }
+  .summary-h { color: #000; border-bottom-color: #000; }
+  .summary-day { break-inside: avoid; }
+}
+
+/* ---- Wide screens: sidebar layout ------------------------- */
+@media (min-width: 720px) {
+  .app {
+    display: grid;
+    grid-template-columns: var(--sidebar-w, 200px) 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "nav main";
+    padding-bottom: 0; min-height: 100vh;
+    transition: grid-template-columns var(--t-mid) var(--ease);
+  }
+  :root.nav-collapsed .app { --sidebar-w: 68px; }
+
+  /* Zoom the whole UI in when the sidebar is collapsed, so the reclaimed width
+     gives a bigger, more readable view. Scaling the ROOT font-size enlarges all
+     rem-based tokens (type + spacing) and reflows cleanly - no blur/clipping.
+     Reverts to default when the sidebar is expanded. The collapsed icon-rail
+     sidebar scales too, which is harmless. */
+  .main { transition: max-width var(--t-mid) var(--ease); }
+  :root.nav-collapsed .main { max-width: 1180px; }
+
+  /* No top bar on desktop - the sidebar carries brand, nav, theme + data */
+  .topbar { display: none; }
+
+  /* Sidebar: elegant light-surface panel (WealthOrah style) */
+  .tabbar {
+    grid-area: nav; position: relative; height: 100vh;
+    flex-direction: column; align-items: stretch;
+    border-top: none; overflow: visible;
+    padding: var(--sp-4) var(--sp-3);
+    background: var(--surface);
+    box-shadow: 4px 0 20px rgba(11, 79, 108, 0.06);
+    gap: 2px;
+  }
+
+  /* Collapse chevron: on the right edge, vertically centred, appears on hover */
+  .nav-collapse {
+    display: grid; place-items: center;
+    position: absolute; top: 50%; right: -14px; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-light); font-size: 0.72rem; z-index: 30;
+    box-shadow: 2px 0 8px rgba(11, 79, 108, 0.12);
+    opacity: 0.5; transition: opacity var(--t-fast) var(--ease),
+      background var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+      transform var(--t-fast) var(--ease);
+  }
+  .tabbar:hover .nav-collapse,
+  .nav-collapse:focus-visible { opacity: 1; }
+  .nav-collapse:hover {
+    background: var(--primary); color: #fff;
+    transform: translateY(-50%) scale(1.12);
+  }
+  .tabbar .nav-group { display: flex; flex-direction: column; gap: 2px; }
+
+  .tabbar .nav-brand {
+    display: flex; align-items: center; gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-1) var(--sp-4);
+    margin-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand-text { flex: 1; min-width: 0; overflow: hidden; }
+  .nav-brand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---- Collapsed state ---- */
+  :root.nav-collapsed .tabbar { padding: var(--sp-4) var(--sp-2); align-items: center; }
+  :root.nav-collapsed .tab-label,
+  :root.nav-collapsed .nav-brand-text,
+  :root.nav-collapsed .nav-section-label,
+  :root.nav-collapsed .nav-subnav { display: none; }
+  :root.nav-collapsed .tabbar .nav-brand {
+    flex-direction: column; justify-content: center; gap: var(--sp-2);
+    padding: var(--sp-2) 0 var(--sp-3);
+  }
+  :root.nav-collapsed .tab,
+  :root.nav-collapsed .nav-action {
+    justify-content: center; padding: var(--sp-3) 0; gap: 0;
+  }
+
+  .tab, .nav-action {
+    flex: none; flex-direction: row; justify-content: flex-start; gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4); border-radius: 10px;
+    font-size: var(--fs-sm); font-weight: 600;
+    color: var(--text-light); background: transparent; min-height: 44px;
+    width: 100%; border: none; text-align: left;
+    transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease),
+                color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+  }
+  .tab .tab-icon, .nav-action .tab-icon { font-size: 1.15rem; }
+  .tab:hover, .nav-action:hover {
+    color: var(--accent-strong); background: var(--surface-2);
+    transform: scale(1.04); box-shadow: 0 4px 14px rgba(11, 79, 108, 0.1);
+    box-shadow: inset 3px 0 0 var(--accent), 0 4px 14px rgba(11, 79, 108, 0.1);
+  }
+  .tab[aria-current="page"] {
+    background: var(--primary-soft); color: var(--primary-strong); font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  /* Sidebar sub-nav (Domestic / International):
+     collapsed by default; reveals when the Trips group is hovered/focused,
+     or when a Trips filter is active (so the choice stays visible). */
+  .nav-subnav {
+    display: flex; flex-direction: column; gap: 2px;
+    margin: 0 0 0 var(--sp-4);
+    padding-left: var(--sp-3);
+    border-left: 2px solid var(--border);
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height var(--t-mid) var(--ease), opacity var(--t-mid) var(--ease),
+                margin var(--t-mid) var(--ease);
+  }
+  /* Reveal on hover/focus of the specific nav-item, or when active */
+  .nav-item:hover .nav-subnav,
+  .nav-item:focus-within .nav-subnav,
+  .nav-subnav.is-open {
+    max-height: 120px; opacity: 1; margin: 2px 0 2px var(--sp-4);
+  }
+  .nav-item { display: flex; flex-direction: column; gap: 2px; }
+  .subtab {
+    display: flex; align-items: center; gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3); border-radius: 8px;
+    font-size: var(--fs-sm); font-weight: 600; color: var(--text-light);
+    background: transparent; border: none; text-align: left; width: 100%;
+    min-height: 38px;
+    transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+                transform var(--t-fast) var(--ease);
+  }
+  .subtab .tab-icon { font-size: 1rem; }
+  .subtab:hover { color: var(--accent-strong); background: var(--surface-2); transform: translateX(2px); }
+  .subtab.is-active { color: var(--primary-strong); background: var(--primary-soft); box-shadow: inset 2px 0 0 var(--accent); }
+
+  /* Footer group, pushed to the bottom - single divider above it. */
+  .tabbar .nav-group-data {
+    display: block;
+    margin-top: auto; padding-top: var(--sp-3);
+    border-top: 1px solid var(--border);
+  }
+  /* Show the sidebar brand footer; hide the mobile one. No extra border here. */
+  .nav-group-data .brand-footer { display: block; }
+  .brand-footer-mobile { display: none; }
+  .nav-section-label {
+    display: block; font-size: var(--fs-xs); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); padding: 0 var(--sp-4) var(--sp-1);
+  }
+  .nav-action { display: flex; }
+
+  .main {
+    grid-area: main; overflow: auto;
+    padding: var(--sp-5) var(--sp-6);
+    max-width: 1040px;
+  }
+}
+
+/* ---- Motion & print preferences --------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .topbar, .tabbar, .icon-btn, .no-print, .app-footer { display: none !important; }
+  .app { padding: 0; display: block; }
+}

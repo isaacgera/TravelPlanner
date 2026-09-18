@@ -1,0 +1,357 @@
+{
+  "version": 1,
+  "trips": [
+    {
+      "id": "trip_kerala_2026",
+      "name": "Kerala Backwaters Getaway",
+      "notes": "Family monsoon-season trip. Houseboat in Alleppey was the highlight. Remember to book the Munnar tea estate tour earlier next time.",
+      "country": { "name": "India", "code": "IN" },
+      "places": [
+        { "id": "place_kochi", "query": "Kochi", "name": "Kochi", "lat": 9.9312, "lon": 76.2673, "admin": "Kerala", "country": "India", "weatherCache": null },
+        { "id": "place_alleppey", "query": "Alappuzha", "name": "Alappuzha", "lat": 9.4981, "lon": 76.3388, "admin": "Kerala", "country": "India", "weatherCache": null },
+        { "id": "place_munnar", "query": "Munnar", "name": "Munnar", "lat": 10.0889, "lon": 77.0595, "admin": "Kerala", "country": "India", "weatherCache": null }
+      ],
+      "startDate": "2026-08-14",
+      "endDate": "2026-08-21",
+      "travellers": ["Arjun Nair", "Meera Nair", "Rohan Nair"],
+      "itinerary": [
+        { "date": "2026-08-14", "entries": ["Land at Kochi (COK), pick up rental car", "Fort Kochi walk + Chinese fishing nets at sunset", "Dinner at a seafood place in Fort Kochi"] },
+        { "date": "2026-08-15", "entries": ["Drive to Alappuzha", "Check into houseboat, lunch on board", "Slow cruise through the backwaters"] },
+        { "date": "2026-08-16", "entries": ["Sunrise on the houseboat", "Village walk and canoe ride", "Head back to shore by afternoon"] },
+        { "date": "2026-08-17", "entries": ["Drive up to Munnar (approx 4.5 hrs)", "Stop at Cheeyappara waterfalls", "Evening tea at the hotel"] },
+        { "date": "2026-08-18", "entries": ["Tea estate tour + tea museum", "Top Station viewpoint", "Spice garden visit"] },
+        { "date": "2026-08-19", "entries": ["Eravikulam National Park (Nilgiri tahr)", "Mattupetty Dam", "Relaxed evening"] },
+        { "date": "2026-08-20", "entries": ["Drive back towards Kochi", "Last-minute shopping for spices and tea", "Farewell dinner"] },
+        { "date": "2026-08-21", "entries": ["Return rental car", "Fly home from Kochi"] }
+      ],
+      "packing": [
+        { "category": "Clothes", "items": [
+          { "id": "item_k1", "label": "Light cotton shirts", "qty": 5, "packed": true },
+          { "id": "item_k2", "label": "Quick-dry trousers", "qty": 2, "packed": true },
+          { "id": "item_k3", "label": "Rain jacket", "qty": 1, "packed": true },
+          { "id": "item_k4", "label": "Sandals", "qty": 1, "packed": true }
+        ] },
+        { "category": "Toiletries", "items": [
+          { "id": "item_k5", "label": "Sunscreen SPF 50", "qty": 1, "packed": true },
+          { "id": "item_k6", "label": "Mosquito repellent", "qty": 1, "packed": true }
+        ] },
+        { "category": "Documents", "items": [
+          { "id": "item_k7", "label": "ID cards", "qty": 3, "packed": true },
+          { "id": "item_k8", "label": "Houseboat booking printout", "qty": 1, "packed": true }
+        ] },
+        { "category": "Tech", "items": [
+          { "id": "item_k9", "label": "Phone chargers", "qty": 3, "packed": true },
+          { "id": "item_k10", "label": "Power bank", "qty": 1, "packed": true }
+        ] }
+      ],
+      "flights": [
+        { "id": "flt_kerala_out", "label": "Outbound to Kochi", "flightNo": "6E 517", "from": "BLR", "to": "COK", "date": "2026-08-14", "depTime": "07:20", "arrTime": "08:35" },
+        { "id": "flt_kerala_back", "label": "Return home", "flightNo": "6E 634", "from": "COK", "to": "BLR", "date": "2026-08-21", "depTime": "19:10", "arrTime": "20:25" }
+      ],
+      "stays": [
+        { "id": "stay_alleppey_boat", "name": "Premium Houseboat (Punnamada)", "city": "Alappuzha", "checkIn": "2026-08-15", "checkOut": "2026-08-16", "notes": "1 night on the backwaters, all meals included" },
+        { "id": "stay_munnar_resort", "name": "Tea County Hill Resort", "city": "Munnar", "checkIn": "2026-08-17", "checkOut": "2026-08-20", "notes": "Room with a valley view" }
+      ]
+    },
+    {
+      "id": "trip_goa_dec2026",
+      "name": "Goa Winter Escape",
+      "notes": "Currently on this one. Chill beach trip, no rigid plan. Sunset at Anjuna is a must.",
+      "country": { "name": "India", "code": "IN" },
+      "places": [
+        { "id": "place_northgoa", "query": "Panaji", "name": "Panaji", "lat": 15.4909, "lon": 73.8278, "admin": "Goa", "country": "India", "weatherCache": null },
+        { "id": "place_anjuna", "query": "Anjuna", "name": "Anjuna", "lat": 15.5735, "lon": 73.7409, "admin": "Goa", "country": "India", "weatherCache": null }
+      ],
+      "startDate": "2026-12-02",
+      "endDate": "2026-12-09",
+      "travellers": ["Arjun Nair", "Meera Nair"],
+      "itinerary": [
+        { "date": "2026-12-02", "entries": ["Arrive at Dabolim, taxi to Anjuna", "Settle in, beach shack lunch", "Sunset at Anjuna beach"] },
+        { "date": "2026-12-03", "entries": ["Lazy morning", "Baga and Calangute stroll", "Night market (Wed/Sat only - check dates)"] },
+        { "date": "2026-12-04", "entries": ["Rent a scooter", "Chapora Fort viewpoint", "Cafe hopping in Assagao"] },
+        { "date": "2026-12-05", "entries": ["Day trip to Old Goa churches", "Panaji Latin Quarter (Fontainhas) walk", "River cruise on the Mandovi"] },
+        { "date": "2026-12-06", "entries": ["Beach day - Vagator", "Spice plantation tour", "Seafood dinner"] },
+        { "date": "2026-12-07", "entries": ["South Goa day trip - Palolem", "Dolphin-spotting boat ride"] },
+        { "date": "2026-12-08", "entries": ["Souvenir shopping", "Final sunset + beach bonfire"] },
+        { "date": "2026-12-09", "entries": ["Checkout", "Fly home"] }
+      ],
+      "packing": [
+        { "category": "Clothes", "items": [
+          { "id": "item_g1", "label": "Beachwear / swimsuits", "qty": 2, "packed": true },
+          { "id": "item_g2", "label": "Shorts", "qty": 4, "packed": true },
+          { "id": "item_g3", "label": "T-shirts", "qty": 5, "packed": true },
+          { "id": "item_g4", "label": "Flip-flops", "qty": 1, "packed": true },
+          { "id": "item_g5", "label": "Light evening outfit", "qty": 1, "packed": false }
+        ] },
+        { "category": "Toiletries", "items": [
+          { "id": "item_g6", "label": "Sunscreen SPF 50", "qty": 1, "packed": true },
+          { "id": "item_g7", "label": "Aloe vera gel", "qty": 1, "packed": false },
+          { "id": "item_g8", "label": "Lip balm with SPF", "qty": 1, "packed": true }
+        ] },
+        { "category": "Documents", "items": [
+          { "id": "item_g9", "label": "ID cards", "qty": 2, "packed": true },
+          { "id": "item_g10", "label": "Hotel booking confirmation", "qty": 1, "packed": true }
+        ] },
+        { "category": "Tech", "items": [
+          { "id": "item_g11", "label": "Phone charger", "qty": 2, "packed": true },
+          { "id": "item_g12", "label": "Waterproof phone pouch", "qty": 1, "packed": false },
+          { "id": "item_g13", "label": "Power bank", "qty": 1, "packed": true }
+        ] },
+        { "category": "Misc", "items": [
+          { "id": "item_g14", "label": "Beach towel", "qty": 2, "packed": true },
+          { "id": "item_g15", "label": "Sunglasses", "qty": 2, "packed": true },
+          { "id": "item_g16", "label": "Beach hat", "qty": 1, "packed": false }
+        ] }
+      ],
+      "flights": [
+        { "id": "flt_goa_out", "label": "Outbound to Goa", "flightNo": "AI 2853", "from": "BLR", "to": "GOI", "date": "2026-12-02", "depTime": "10:05", "arrTime": "11:15" },
+        { "id": "flt_goa_back", "label": "Return home", "flightNo": "AI 2854", "from": "GOI", "to": "BLR", "date": "2026-12-09", "depTime": "16:40", "arrTime": "17:55" }
+      ],
+      "stays": [
+        { "id": "stay_goa_villa", "name": "Anjuna Beachside Villa", "city": "Anjuna", "checkIn": "2026-12-02", "checkOut": "2026-12-09", "notes": "Private pool, 5 min walk to the beach" }
+      ]
+    },
+    {
+      "id": "trip_dubai_dec2026",
+      "name": "Dubai City Break",
+      "notes": "Short international trip, within the weather forecast window. Book the Burj Khalifa slot in advance to skip queues.",
+      "country": { "name": "United Arab Emirates", "code": "AE" },
+      "places": [
+        { "id": "place_dubai", "query": "Dubai", "name": "Dubai", "lat": 25.2048, "lon": 55.2708, "admin": "Dubai", "country": "United Arab Emirates", "weatherCache": null }
+      ],
+      "startDate": "2026-12-16",
+      "endDate": "2026-12-20",
+      "travellers": ["Arjun Nair", "Meera Nair", "Rohan Nair"],
+      "itinerary": [
+        { "date": "2026-12-16", "entries": ["Land at DXB, check in", "Evening at Dubai Mall + Dubai Fountain show", "Dinner at the mall"] },
+        { "date": "2026-12-17", "entries": ["Burj Khalifa At the Top (booked slot)", "Old Dubai - Gold and Spice souks", "Abra boat ride across Dubai Creek"] },
+        { "date": "2026-12-18", "entries": ["Desert safari - dune bashing", "BBQ dinner and cultural show under the stars"] },
+        { "date": "2026-12-19", "entries": ["Palm Jumeirah + The View at The Palm", "Beach afternoon at JBR", "Global Village in the evening"] },
+        { "date": "2026-12-20", "entries": ["Last-minute shopping", "Fly home"] }
+      ],
+      "packing": [
+        { "category": "Clothes", "items": [
+          { "id": "item_d1", "label": "Casual daywear", "qty": 4, "packed": false },
+          { "id": "item_d2", "label": "Light jacket (evenings)", "qty": 1, "packed": false },
+          { "id": "item_d3", "label": "Modest outfit (for souks)", "qty": 1, "packed": false },
+          { "id": "item_d4", "label": "Comfortable walking shoes", "qty": 1, "packed": true }
+        ] },
+        { "category": "Documents", "items": [
+          { "id": "item_d5", "label": "Passports", "qty": 3, "packed": true },
+          { "id": "item_d6", "label": "UAE visa printouts", "qty": 3, "packed": true },
+          { "id": "item_d7", "label": "Hotel + tour vouchers", "qty": 1, "packed": false },
+          { "id": "item_d8", "label": "Travel insurance", "qty": 1, "packed": false }
+        ] },
+        { "category": "Tech", "items": [
+          { "id": "item_d9", "label": "Universal travel adapter", "qty": 1, "packed": false },
+          { "id": "item_d10", "label": "Phone chargers", "qty": 3, "packed": false },
+          { "id": "item_d11", "label": "Power bank", "qty": 1, "packed": false }
+        ] },
+        { "category": "Health/Meds", "items": [
+          { "id": "item_d12", "label": "Basic first-aid kit", "qty": 1, "packed": false },
+          { "id": "item_d13", "label": "Motion sickness tablets (desert safari)", "qty": 1, "packed": false }
+        ] }
+      ],
+      "flights": [
+        { "id": "flt_dubai_out", "label": "Outbound to Dubai", "flightNo": "EK 565", "from": "BLR", "to": "DXB", "date": "2026-12-16", "depTime": "04:15", "arrTime": "07:05" },
+        { "id": "flt_dubai_back", "label": "Return home", "flightNo": "EK 568", "from": "DXB", "to": "BLR", "date": "2026-12-20", "depTime": "21:30", "arrTime": "02:40" }
+      ],
+      "stays": [
+        { "id": "stay_dubai_hotel", "name": "Downtown Dubai Hotel & Suites", "city": "Dubai", "checkIn": "2026-12-16", "checkOut": "2026-12-20", "notes": "Walking distance to Dubai Mall, breakfast included" }
+      ]
+    },
+    {
+      "id": "trip_rajasthan_jan2027",
+      "name": "Royal Rajasthan Tour",
+      "notes": "Domestic heritage trip, beyond the 16-day forecast window. Palaces, forts, and desert. Pack for cold desert nights.",
+      "country": { "name": "India", "code": "IN" },
+      "places": [
+        { "id": "place_jaipur", "query": "Jaipur", "name": "Jaipur", "lat": 26.9124, "lon": 75.7873, "admin": "Rajasthan", "country": "India", "weatherCache": null },
+        { "id": "place_udaipur", "query": "Udaipur", "name": "Udaipur", "lat": 24.5854, "lon": 73.7125, "admin": "Rajasthan", "country": "India", "weatherCache": null },
+        { "id": "place_jaisalmer", "query": "Jaisalmer", "name": "Jaisalmer", "lat": 26.9157, "lon": 70.9083, "admin": "Rajasthan", "country": "India", "weatherCache": null }
+      ],
+      "startDate": "2027-01-20",
+      "endDate": "2027-01-28",
+      "travellers": ["Arjun Nair", "Meera Nair", "Priya Sharma", "Kabir Sharma"],
+      "itinerary": [
+        { "date": "2027-01-20", "entries": ["Arrive Jaipur, check in", "Evening at Chokhi Dhani (cultural village)"] },
+        { "date": "2027-01-21", "entries": ["Amber Fort + elephant ride", "City Palace and Jantar Mantar", "Hawa Mahal photo stop"] },
+        { "date": "2027-01-22", "entries": ["Nahargarh Fort sunrise", "Drive to Udaipur (overnight en route stop optional)"] },
+        { "date": "2027-01-23", "entries": ["City Palace Udaipur", "Boat ride on Lake Pichola", "Sunset at Ambrai Ghat"] },
+        { "date": "2027-01-24", "entries": ["Sajjangarh (Monsoon Palace)", "Jagdish Temple", "Shopping in the old city"] },
+        { "date": "2027-01-25", "entries": ["Fly / drive to Jaisalmer", "Evening walk in the Golden Fort"] },
+        { "date": "2027-01-26", "entries": ["Patwon Ki Haveli", "Sam Sand Dunes - camel safari", "Desert camp overnight with folk music"] },
+        { "date": "2027-01-27", "entries": ["Sunrise over the dunes", "Gadisar Lake", "Relaxed final evening"] },
+        { "date": "2027-01-28", "entries": ["Fly home from Jaisalmer/Jodhpur"] }
+      ],
+      "packing": [
+        { "category": "Clothes", "items": [
+          { "id": "item_r1", "label": "Warm layers (desert nights)", "qty": 3, "packed": false },
+          { "id": "item_r2", "label": "Light daywear", "qty": 4, "packed": false },
+          { "id": "item_r3", "label": "Comfortable walking shoes", "qty": 1, "packed": false },
+          { "id": "item_r4", "label": "Scarf / stole", "qty": 2, "packed": false }
+        ] },
+        { "category": "Documents", "items": [
+          { "id": "item_r5", "label": "ID cards", "qty": 4, "packed": false },
+          { "id": "item_r6", "label": "Hotel and camp bookings", "qty": 1, "packed": false }
+        ] },
+        { "category": "Health/Meds", "items": [
+          { "id": "item_r7", "label": "Moisturiser + lip balm (dry climate)", "qty": 1, "packed": false },
+          { "id": "item_r8", "label": "Basic medicines", "qty": 1, "packed": false }
+        ] },
+        { "category": "Misc", "items": [
+          { "id": "item_r9", "label": "Camera", "qty": 1, "packed": false },
+          { "id": "item_r10", "label": "Reusable water bottles", "qty": 4, "packed": false }
+        ] }
+      ],
+      "flights": [
+        { "id": "flt_raj_out", "label": "Outbound to Jaipur", "flightNo": "6E 6182", "from": "BLR", "to": "JAI", "date": "2027-01-20", "depTime": "06:00", "arrTime": "08:45" },
+        { "id": "flt_raj_back", "label": "Return home", "flightNo": "6E 275", "from": "JSA", "to": "BLR", "date": "2027-01-28", "depTime": "13:20", "arrTime": "16:30" }
+      ],
+      "stays": [
+        { "id": "stay_jaipur_haveli", "name": "Heritage Haveli Jaipur", "city": "Jaipur", "checkIn": "2027-01-20", "checkOut": "2027-01-22", "notes": "Restored heritage property near the old city" },
+        { "id": "stay_udaipur_lake", "name": "Lake View Palace Hotel", "city": "Udaipur", "checkIn": "2027-01-22", "checkOut": "2027-01-25", "notes": "Room facing Lake Pichola" },
+        { "id": "stay_jaisalmer_camp", "name": "Sam Dunes Desert Camp", "city": "Jaisalmer", "checkIn": "2027-01-26", "checkOut": "2027-01-27", "notes": "Luxury tent, dinner and folk show included" }
+      ]
+    },
+    {
+      "id": "trip_japan_mar2027",
+      "name": "Japan Cherry Blossom Trip",
+      "notes": "Big international trip, well beyond the forecast window. Timed for the sakura season. Get JR Pass before arrival.",
+      "country": { "name": "Japan", "code": "JP" },
+      "places": [
+        { "id": "place_tokyo", "query": "Tokyo", "name": "Tokyo", "lat": 35.6762, "lon": 139.6503, "admin": "Tokyo", "country": "Japan", "weatherCache": null },
+        { "id": "place_kyoto", "query": "Kyoto", "name": "Kyoto", "lat": 35.0116, "lon": 135.7681, "admin": "Kyoto", "country": "Japan", "weatherCache": null },
+        { "id": "place_osaka", "query": "Osaka", "name": "Osaka", "lat": 34.6937, "lon": 135.5023, "admin": "Osaka", "country": "Japan", "weatherCache": null }
+      ],
+      "startDate": "2027-03-28",
+      "endDate": "2027-04-07",
+      "travellers": ["Arjun Nair", "Meera Nair"],
+      "itinerary": [
+        { "date": "2027-03-28", "entries": ["Arrive Narita, activate JR Pass", "Check into Tokyo hotel", "Evening in Shinjuku"] },
+        { "date": "2027-03-29", "entries": ["Meiji Shrine + Harajuku", "Shibuya crossing", "Cherry blossoms at Yoyogi Park"] },
+        { "date": "2027-03-30", "entries": ["Asakusa + Senso-ji Temple", "Sumida River sakura walk", "Tokyo Skytree at night"] },
+        { "date": "2027-03-31", "entries": ["Day trip to Hakone", "Lake Ashi cruise, views of Mt Fuji", "Open-air onsen"] },
+        { "date": "2027-04-01", "entries": ["Shinkansen to Kyoto", "Fushimi Inari shrine (torii gates)", "Gion district in the evening"] },
+        { "date": "2027-04-02", "entries": ["Arashiyama bamboo grove", "Kinkaku-ji (Golden Pavilion)", "Philosopher's Path sakura"] },
+        { "date": "2027-04-03", "entries": ["Nara day trip - deer park + Todai-ji", "Return to Kyoto"] },
+        { "date": "2027-04-04", "entries": ["Train to Osaka", "Osaka Castle + park sakura", "Dotonbori food crawl"] },
+        { "date": "2027-04-05", "entries": ["Universal Studios Japan (full day)"] },
+        { "date": "2027-04-06", "entries": ["Kuromon Ichiba market", "Last-minute shopping in Namba"] },
+        { "date": "2027-04-07", "entries": ["Fly home from Kansai (KIX)"] }
+      ],
+      "packing": [
+        { "category": "Clothes", "items": [
+          { "id": "item_j1", "label": "Layered spring clothing", "qty": 6, "packed": false },
+          { "id": "item_j2", "label": "Light waterproof jacket", "qty": 1, "packed": false },
+          { "id": "item_j3", "label": "Very comfortable walking shoes", "qty": 1, "packed": false },
+          { "id": "item_j4", "label": "Smart outfit (nice dinner)", "qty": 1, "packed": false }
+        ] },
+        { "category": "Documents", "items": [
+          { "id": "item_j5", "label": "Passports", "qty": 2, "packed": false },
+          { "id": "item_j6", "label": "JR Pass exchange order", "qty": 2, "packed": false },
+          { "id": "item_j7", "label": "Hotel bookings", "qty": 1, "packed": false },
+          { "id": "item_j8", "label": "Travel insurance", "qty": 1, "packed": false }
+        ] },
+        { "category": "Tech", "items": [
+          { "id": "item_j9", "label": "Pocket WiFi / eSIM", "qty": 1, "packed": false },
+          { "id": "item_j10", "label": "Type A plug adapter", "qty": 2, "packed": false },
+          { "id": "item_j11", "label": "Power bank", "qty": 1, "packed": false },
+          { "id": "item_j12", "label": "Camera + spare battery", "qty": 1, "packed": false }
+        ] },
+        { "category": "Misc", "items": [
+          { "id": "item_j13", "label": "Foldable day bag", "qty": 1, "packed": false },
+          { "id": "item_j14", "label": "Coin purse (lots of coins in Japan)", "qty": 1, "packed": false }
+        ] }
+      ],
+      "flights": [
+        { "id": "flt_japan_out", "label": "Outbound to Tokyo", "flightNo": "NH 764", "from": "BLR", "to": "NRT", "date": "2027-03-28", "depTime": "23:55", "arrTime": "13:30" },
+        { "id": "flt_japan_back", "label": "Return home", "flightNo": "NH 763", "from": "KIX", "to": "BLR", "date": "2027-04-07", "depTime": "11:20", "arrTime": "17:05" }
+      ],
+      "stays": [
+        { "id": "stay_tokyo_hotel", "name": "Shinjuku Business Hotel", "city": "Tokyo", "checkIn": "2027-03-28", "checkOut": "2027-04-01", "notes": "Near JR Shinjuku station" },
+        { "id": "stay_kyoto_ryokan", "name": "Traditional Ryokan Gion", "city": "Kyoto", "checkIn": "2027-04-01", "checkOut": "2027-04-04", "notes": "Tatami rooms, kaiseki dinner one night" },
+        { "id": "stay_osaka_hotel", "name": "Namba City Hotel", "city": "Osaka", "checkIn": "2027-04-04", "checkOut": "2027-04-07", "notes": "Central, close to Dotonbori" }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "tpl_beach",
+      "name": "Beach Trip",
+      "categories": [
+        { "category": "Clothes", "items": [
+          { "label": "Swimsuits", "qty": 2 },
+          { "label": "Shorts", "qty": 4 },
+          { "label": "T-shirts", "qty": 5 },
+          { "label": "Flip-flops", "qty": 1 },
+          { "label": "Light cover-up", "qty": 1 }
+        ] },
+        { "category": "Toiletries", "items": [
+          { "label": "Sunscreen SPF 50", "qty": 1 },
+          { "label": "Aloe vera gel", "qty": 1 },
+          { "label": "Lip balm with SPF", "qty": 1 }
+        ] },
+        { "category": "Misc", "items": [
+          { "label": "Beach towel", "qty": 2 },
+          { "label": "Sunglasses", "qty": 1 },
+          { "label": "Beach hat", "qty": 1 },
+          { "label": "Waterproof phone pouch", "qty": 1 }
+        ] }
+      ]
+    },
+    {
+      "id": "tpl_business",
+      "name": "Business Trip",
+      "categories": [
+        { "category": "Clothes", "items": [
+          { "label": "Formal shirts", "qty": 3 },
+          { "label": "Trousers / suit", "qty": 2 },
+          { "label": "Formal shoes", "qty": 1 },
+          { "label": "Tie / accessories", "qty": 2 }
+        ] },
+        { "category": "Documents", "items": [
+          { "label": "ID / passport", "qty": 1 },
+          { "label": "Business cards", "qty": 1 },
+          { "label": "Meeting agenda printout", "qty": 1 }
+        ] },
+        { "category": "Tech", "items": [
+          { "label": "Laptop + charger", "qty": 1 },
+          { "label": "Phone charger", "qty": 1 },
+          { "label": "Presentation clicker", "qty": 1 },
+          { "label": "Power bank", "qty": 1 }
+        ] }
+      ]
+    },
+    {
+      "id": "tpl_winter",
+      "name": "Winter / Cold Weather",
+      "categories": [
+        { "category": "Clothes", "items": [
+          { "label": "Thermal base layers", "qty": 3 },
+          { "label": "Heavy jacket / parka", "qty": 1 },
+          { "label": "Sweaters", "qty": 3 },
+          { "label": "Woollen gloves", "qty": 1 },
+          { "label": "Beanie / warm hat", "qty": 1 },
+          { "label": "Thick socks", "qty": 5 }
+        ] },
+        { "category": "Toiletries", "items": [
+          { "label": "Heavy moisturiser", "qty": 1 },
+          { "label": "Lip balm", "qty": 1 }
+        ] },
+        { "category": "Health/Meds", "items": [
+          { "label": "Cold / flu medicine", "qty": 1 },
+          { "label": "Hand warmers", "qty": 4 }
+        ] }
+      ]
+    }
+  ],
+  "people": [
+    { "id": "person_arjun", "name": "Arjun Nair", "birthday": "1988-06-12", "ageText": "", "gender": "Male" },
+    { "id": "person_meera", "name": "Meera Nair", "birthday": "1990-11-03", "ageText": "", "gender": "Female" },
+    { "id": "person_rohan", "name": "Rohan Nair", "birthday": "2015-02-27", "ageText": "", "gender": "Male" },
+    { "id": "person_priya", "name": "Priya Sharma", "birthday": "1987-09-19", "ageText": "", "gender": "Female" },
+    { "id": "person_kabir", "name": "Kabir Sharma", "birthday": "1985-04-08", "ageText": "", "gender": "Male" },
+    { "id": "person_ananya", "name": "Ananya Iyer", "birthday": "1992-12-30", "ageText": "", "gender": "Female" }
+  ]
+}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f8a7e" />
+  <meta name="description" content="Travel Planner - plan family & friends trips: travellers, cities, day-by-day itinerary with per-city weather, and reusable packing checklists. Local-first, works offline." />
+  <title>Travel Planner</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <div class="app">
+    <!-- Top bar: mobile only (desktop uses the sidebar) -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <span class="topbar-mark" aria-hidden="true">&#9992;</span>
+        <span class="topbar-name">Travel&nbsp;Planner</span>
+      </div>
+      <div class="topbar-actions">
+        <button id="theme-toggle" class="icon-btn" type="button" aria-pressed="false"
+          aria-label="Switch to dark theme" title="Toggle light / dark theme">
+          <span class="theme-icon" aria-hidden="true">&#9788;</span>
+        </button>
+      </div>
+    </header>
+
+    <input id="import-file" type="file" accept="application/json,.json" hidden />
+
+    <!-- Main content: views are swapped in here -->
+    <main id="main" class="main" tabindex="-1">
+      <h1 class="sr-only">Travel Planner</h1>
+      <section id="view-trips" class="view" aria-label="Trips"></section>
+      <section id="view-trip" class="view" aria-label="Trip detail" hidden></section>
+      <section id="view-templates" class="view" aria-label="Packing templates" hidden></section>
+      <section id="view-personalization" class="view" aria-label="Personalization" hidden></section>
+      <section id="view-about" class="view" aria-label="About" hidden></section>
+    </main>
+
+    <!-- Mobile-only brand footer (fixed at page bottom, above the tab bar) -->
+    <footer class="brand-footer-mobile no-print">
+      <span class="brand-footer-line">Powered by Forj&eacute;</span>
+      <span class="brand-footer-copy">&copy; 2026 Isaac A Gera. All rights reserved.</span>
+    </footer>
+
+    <!-- Bottom tab bar (becomes a sidebar on wider screens via CSS) -->
+    <nav class="tabbar" aria-label="Primary">
+      <button id="nav-collapse" class="nav-collapse" type="button"
+        aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
+        <span class="nav-collapse-icon" aria-hidden="true">&#10094;</span>
+      </button>
+
+      <div class="nav-brand">
+        <span class="nav-brand-mark" aria-hidden="true">&#9992;</span>
+        <span class="nav-brand-text">
+          <span class="nav-brand-name">Travel Planner</span>
+          <span class="nav-brand-tag">Plan every journey</span>
+        </span>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-item">
+          <button class="tab" data-nav="trips" type="button" aria-current="page" title="Trips">
+            <span class="tab-icon" aria-hidden="true">&#128188;</span>
+            <span class="tab-label">Trips</span>
+          </button>
+          <div class="nav-subnav" data-subnav="trips" role="group" aria-label="Filter trips">
+            <button class="subtab" data-nav="trips" data-filter="domestic" type="button" title="Domestic trips">
+              <span class="tab-icon" aria-hidden="true">&#127968;</span>
+              <span class="tab-label">Domestic</span>
+            </button>
+            <button class="subtab" data-nav="trips" data-filter="international" type="button" title="International trips">
+              <span class="tab-icon" aria-hidden="true">&#9992;</span>
+              <span class="tab-label">International</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-item">
+          <button class="tab" data-nav="templates" type="button" title="Presets">
+            <span class="tab-icon" aria-hidden="true">&#128203;</span>
+            <span class="tab-label">Presets</span>
+          </button>
+          <div class="nav-subnav" data-subnav="templates" role="group" aria-label="Preset sections">
+            <button class="subtab" data-nav="templates" data-section="people" type="button" title="Travellers">
+              <span class="tab-icon" aria-hidden="true">&#128101;</span>
+              <span class="tab-label">Travellers</span>
+            </button>
+            <button class="subtab" data-nav="templates" data-section="packing" type="button" title="Packing presets">
+              <span class="tab-icon" aria-hidden="true">&#129530;</span>
+              <span class="tab-label">Packing lists</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-item">
+          <button class="tab" data-nav="personalization" type="button" title="Personalization">
+            <span class="tab-icon" aria-hidden="true">&#9881;</span>
+            <span class="tab-label">Personalize</span>
+          </button>
+          <div class="nav-subnav" data-subnav="personalization" role="group" aria-label="Personalization sections">
+            <button class="subtab" data-nav="personalization" data-section="appearance" type="button" title="Appearance">
+              <span class="tab-icon" aria-hidden="true">&#127912;</span>
+              <span class="tab-label">Appearance</span>
+            </button>
+            <button class="subtab" data-nav="personalization" data-section="data" type="button" title="Data">
+              <span class="tab-icon" aria-hidden="true">&#128190;</span>
+              <span class="tab-label">Data</span>
+            </button>
+          </div>
+        </div>
+
+        <button class="tab" data-nav="about" type="button" title="About">
+          <span class="tab-icon" aria-hidden="true">&#8505;</span>
+          <span class="tab-label">About</span>
+        </button>
+      </div>
+
+      <!-- Sidebar footer: brand credit + subtle inline theme toggle (desktop) -->
+      <div class="nav-group nav-group-data">
+        <footer class="brand-footer no-print">
+          <button id="theme-toggle-side" class="theme-toggle-btn" type="button" aria-pressed="false" title="Toggle light / dark theme" aria-label="Switch to dark theme">
+            <span class="theme-icon-side" aria-hidden="true">&#9788;</span>
+          </button>
+          <span class="brand-footer-text">
+            <span class="brand-footer-line">Powered by Forj&eacute;</span>
+            <span class="brand-footer-copy">&copy; 2026 Isaac A Gera.<br />All rights reserved.</span>
+          </span>
+        </footer>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Live region for async status (weather loads, save/import feedback) -->
+  <div id="live" class="sr-only" aria-live="polite" role="status"></div>
+
+  <!-- Modal host -->
+  <div id="modal-root" class="modal-root" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

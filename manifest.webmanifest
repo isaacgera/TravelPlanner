@@ -1,0 +1,21 @@
+{
+  "name": "Travel Planner",
+  "short_name": "Travel Planner",
+  "description": "Plan family & friends trips: travellers, cities, day-by-day itinerary with per-city weather, and reusable packing checklists. Local-first, works offline.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#eef2f3",
+  "theme_color": "#0f8a7e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "icons/screenshot-wide.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "Travel Planner on desktop" },
+    { "src": "icons/screenshot-narrow.png", "sizes": "720x1280", "type": "image/png", "form_factor": "narrow", "label": "Travel Planner on mobile" }
+  ]
+}
