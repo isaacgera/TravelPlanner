@@ -5,7 +5,7 @@
    - Bump CACHE_NAME on release so clients pick up new assets
    ============================================================ */
 
-const CACHE_NAME = "travel-planner-v1.0.0-37";
+const CACHE_NAME = "travel-planner-v1.0.1-39";
 
 const APP_SHELL = [
   "./",

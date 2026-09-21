@@ -235,6 +235,126 @@ function renderOverview(body, trip) {
   notesCard.appendChild(ta);
   body.appendChild(notesCard);
 
+  // Attachments (screenshots, PDFs, txt files — stored as Base64)
+  const attachmentsCard = el("div", { class: "card" }, [el("h3", { text: "Attachments" })]);
+  const attachList = el("div", { class: "stack", style: "gap:.5rem" });
+  
+  // Display existing attachments
+  const attachments = trip.attachments || [];
+  if (!attachments.length) {
+    attachList.appendChild(el("p", { class: "meta", text: "No attachments yet. Add tickets, screenshots, or documents." }));
+  } else {
+    attachments.forEach((att, idx) => {
+      const ext = att.name.split(".").pop().toLowerCase();
+      const icon = ext === "pdf" ? "📄" : (["png", "jpg", "jpeg", "gif", "webp"].includes(ext) ? "🖼️" : "📋");
+      const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+      const isPdf = ext === "pdf";
+      
+      attachList.appendChild(
+        el("div", { style: "display:flex;justify-content:space-between;align-items:center;padding:.4rem;background:var(--surface-2);border-radius:6px" }, [
+          el("div", { style: "display:flex;align-items:center;gap:.5rem;min-width:0" }, [
+            el("span", { text: icon, style: "flex-shrink:0" }),
+            el("span", { style: "min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap", title: att.name, text: att.name }),
+            el("span", { class: "meta", text: ` (${(att.data.length / 1024).toFixed(1)}KB)` }),
+          ]),
+          el("div", { style: "display:flex;gap:.25rem;flex-shrink:0" }, [
+            // View button (images and PDFs)
+            isImage ? el("button", {
+              class: "btn btn-sm", type: "button",
+              "aria-label": `View ${att.name}`, title: `View ${att.name}`,
+              onclick: () => {
+                const modal = openModal(
+                  el("div", { style: "text-align:center;max-height:80vh;overflow:auto" }, [
+                    el("img", { src: att.data, style: "max-width:100%;max-height:100%;border-radius:6px" }),
+                    el("div", { style: "margin-top:1rem" }, [
+                      el("p", { class: "meta", text: att.name }),
+                      el("button", { class: "btn btn-sm", type: "button", onclick: () => downloadFile(att) }, "Download"),
+                    ]),
+                  ])
+                );
+              },
+            }, "👁️ View") : (isPdf ? el("button", {
+              class: "btn btn-sm", type: "button",
+              "aria-label": `Open ${att.name}`, title: `Open ${att.name} in new tab`,
+              onclick: () => {
+                const win = window.open(att.data, "_blank");
+                if (!win) announce("Could not open PDF. Your browser may block popups.", true);
+              },
+            }, "👁️ View") : null),
+            // Download button
+            el("button", {
+              class: "btn btn-sm", type: "button",
+              "aria-label": `Download ${att.name}`, title: `Download ${att.name}`,
+              onclick: () => downloadFile(att),
+            }, "⬇️"),
+            // Remove button
+            el("button", {
+              class: "btn btn-danger btn-sm", type: "button",
+              "aria-label": `Remove ${att.name}`, title: `Remove ${att.name}`,
+              onclick: () => {
+                update((d) => {
+                  const t = findTrip(d, trip.id);
+                  t.attachments = (t.attachments || []).filter((_, i) => i !== idx);
+                });
+                rerender(trip.id);
+              },
+            }, "✕"),
+          ]),
+        ])
+      );
+    });
+  }
+  attachmentsCard.appendChild(attachList);
+
+  // File upload input (hidden, triggered by button)
+  const fileInput = el("input", {
+    type: "file",
+    multiple: true,
+    accept: ".pdf,.png,.jpg,.jpeg,.gif,.webp,.txt",
+    style: "display:none",
+    "aria-label": "Select files to attach",
+    onchange: async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      // Convert files to Base64 and add to attachments
+      for (const file of files) {
+        if (file.size > 5 * 1024 * 1024) {
+          announce(`${file.name} is too large (max 5MB). Use File API for larger files (planned for v2).`, true);
+          continue;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          update((d) => {
+            const t = findTrip(d, trip.id);
+            if (!Array.isArray(t.attachments)) t.attachments = [];
+            t.attachments.push({
+              id: uid("attachment"),
+              name: file.name,
+              type: file.type,
+              data: reader.result, // Base64 data URL
+            });
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Reset input so the same file can be re-uploaded
+      setTimeout(() => { fileInput.value = ""; rerender(trip.id); }, 500);
+    },
+  });
+  attachmentsCard.appendChild(fileInput);
+
+  // Upload button
+  attachmentsCard.appendChild(
+    el("button", {
+      class: "btn btn-sm btn-block", type: "button", style: "margin-top:.75rem",
+      onclick: () => fileInput.click(),
+    }, "📎 Add attachment")
+  );
+
+  body.appendChild(attachmentsCard);
+
   // Delete trip
   const dangerCard = el("div", { class: "card" }, [
     el("button", { class: "btn btn-danger btn-block", type: "button", onclick: async () => {
@@ -783,4 +903,15 @@ function weatherBanner(icon, text) {
     el("span", { "aria-hidden": "true", text: icon + "  " }),
     el("span", { text }),
   ]);
+}
+
+/** Download an attachment (Base64 data URL) to the user's device. */
+function downloadFile(att) {
+  const link = document.createElement("a");
+  link.href = att.data;
+  link.download = att.name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  announce(`Downloading ${att.name}...`);
 }

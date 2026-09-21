@@ -203,6 +203,7 @@ function openNewTrip() {
       packing: [],
       flights: [],
       stays: [],
+      attachments: [],
     };
     update((d) => d.trips.push(trip));
     closeModal();

@@ -25,6 +25,7 @@ Two distinct goals - decide which before building, as they differ hugely in effo
 stance - flag and confirm before building (per the build standards).
 
 ## Other parked ideas
+- **Attachments storage — File API upgrade (v1.1+):** v1.0.1 uses Base64 (portable, export/import-friendly, ~5MB limit). For larger files or bulk uploads, switch to File API / IndexedDB (~50MB+), but requires special export/import handling and may complicate import.
 - **Svelte Option B** - a parallel reimplementation of v1 as a learning exercise
   (planned under `experiments/svelte-version/`).
 - **Per-person packing** - packing items assigned to individual travellers.

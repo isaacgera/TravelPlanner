@@ -2,7 +2,7 @@
 
 - **Category:** Home
 - **Complexity tier:** Medium
-- **Status:** In Progress (v1.0.0 feature-complete; publishing to GitHub Pages, then Built)
+- **Status:** Built (v1.0.1 shipped)
 - **Description:** Plan family/friends trips: trip + travellers, one country with multiple
   cities, combined day-by-day itinerary + per-city weather, reusable packing checklists.
 - **Scope (v1):** Trip details, travellers (names), country + cities, combined
@@ -312,3 +312,53 @@ verification will happen via the GitHub Pages HTTPS URL after publish.**
 
 Status: **In Progress (v1.0.0 feature-complete)** — flips to **Built** once the live Pages URL
 is verified on a phone.
+
+---
+
+## Session 5 — 17 Sep 2026 (cont.) — attachments + date fix (v1.0.1)
+**Quick iteration on user feedback: added file upload/view/download for trip attachments,
+and fixed a timezone date bug where Trip Days started a day early in IST.**
+
+### Bug fix
+- **Date off-by-one in Trip Days:** `dateList()` in `ui.js` was using `toISOString()` to
+  format dates, which converts to UTC. In timezones ahead of UTC (India is UTC+5:30), local
+  midnight on Mar 28 became Mar 27 in UTC, so the first day card showed a day early.
+  **Fixed:** wrote a `toLocalISO()` helper that formats dates using local components
+  (getFullYear, getMonth, getDate) instead of UTC conversion. Trip Days now aligns with
+  the trip's start date.
+
+### Feature: Attachments (Plan section)
+- **Upload:** file input accepts PDF, PNG, JPG, GIF, WebP, TXT (5MB max per file).
+- **Storage:** Base64-encoded data URLs, stored in `trip.attachments` array. Portable
+  (export/import automatically include attachments), but limited to ~5MB per file due to
+  localStorage constraints.
+- **View/Download:** each attachment shows icon (📄 PDF, 🖼️ image, 📋 text) + filename + size.
+  - Images open in a lightbox modal with a **View** button.
+  - PDFs open in a new browser tab with a **View** button.
+  - All files have a **Download** button (triggers browser download via Base64 data URL).
+  - **Remove** button deletes the attachment from the trip.
+- **UI placement:** new Attachments section in the Plan tab, after Notes, before Delete.
+- **Backward-compatible:** old trips/backups without an `attachments` field degrade
+  gracefully (treated as empty array).
+- **Export/import:** no changes needed — JSON.stringify/parse automatically serializes
+  Base64 data in the trip object.
+- **Future upgrade:** File API / IndexedDB (~50MB+) noted in FUTURE-ENHANCEMENTS.md for v1.1+.
+
+### Docs
+- **userguide.html:** Plan section updated to describe Attachments (upload, view, download,
+  storage, backup inclusion).
+- **FUTURE-ENHANCEMENTS.md:** File API upgrade note already in place (5MB Base64 → IndexedDB).
+
+### Verified
+- Date fix tested: Trip Days now shows correct start date (no off-by-one).
+- Attachments tested: upload, view (images/PDFs), download, delete all work.
+- Export/import: verified that attachments are included (JSON serialization automatic).
+- Diagnostics: clean across all modified files.
+
+### Files changed
+`ui.js` (date fix), `js/views/trip-detail.js` (attachments UI + downloadFile helper),
+`js/views/trips.js` (initialize `attachments: []`), `js/app.js` (version bumped to 1.0.1),
+`sw.js` (cache bumped to travel-planner-v1.0.1-39), `userguide.html` (docs), FUTURE-ENHANCEMENTS.md (already had File API note).
+
+### Status
+**Built (Travel Planner v1.0.1)** — shipped on GitHub Pages with date fix and attachments feature.

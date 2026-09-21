@@ -143,6 +143,15 @@ export function fmtRange(start, end) {
   return fmtDate(start || end);
 }
 
+/** Local YYYY-MM-DD (avoids the UTC shift that toISOString() introduces in
+ *  timezones ahead of UTC, e.g. IST). */
+function toLocalISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 /** Inclusive list of ISO dates between start and end (capped for safety). */
 export function dateList(start, end) {
   const out = [];
@@ -153,7 +162,7 @@ export function dateList(start, end) {
   let cur = new Date(s);
   let guard = 0;
   while (cur <= last && guard < 366) {
-    out.push(cur.toISOString().slice(0, 10));
+    out.push(toLocalISO(cur));
     cur.setDate(cur.getDate() + 1);
     guard++;
   }
