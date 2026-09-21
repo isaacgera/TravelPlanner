@@ -1,6 +1,6 @@
 ﻿# Travel Planner — Design
 
-- **Category:** Home | **Tier:** Medium | **Status:** v1.0.0 feature-complete (§7 reflects as-built)
+- **Category:** Home | **Tier:** Medium | **Status:** Built (v1.0.1 shipped) — §3 data model and §7 UI reflect as-built
 
 ## 1. Approach
 A single-page, local-first PWA in vanilla HTML/CSS/JS (no build step), consistent with the
@@ -37,6 +37,7 @@ storage so it never collides with other family apps.
       places: [                                // one or more cities within that country
         {
           id, query, name, lat, lon,           // from geocoding
+          admin, country,                      // region + country label for disambiguation
           weatherCache: {                      // per-CITY cache so each shows offline
             fetchedAt,
             daily: [ { date, tempMin, tempMax, code } ]
@@ -44,21 +45,40 @@ storage so it never collides with other family apps.
         }
       ],
       startDate, endDate,
-      travellers: [ "name", ... ],             // v1: names only
+      travellers: [ "name", ... ],             // v1: names as copies (not refs to people[])
       itinerary: [ { date, entries: [ "text", ... ] } ],
-      packing:   [ { category, items: [ { id, label, qty, packed } ] } ]
+      packing:   [ { category, items: [ { id, label, qty, packed } ] } ],
+      flights:   [ { id, label, flightNo, from, to, date, depTime, arrTime } ],
+      stays:     [ { id, name, city, checkIn, checkOut, notes } ],
+      attachments: [                           // Base64 data URLs, max ~5MB each
+        { id, name, type, data }               // viewed via blob URLs; included in export/import
+      ]
     }
   ],
-  templates: [ { id, name, categories: [ { category, items:[{label,qty}] } ] } ]
+  templates: [ { id, name, categories: [ { category, items:[{label,qty}] } ] } ],
+  people: [                                    // master Travellers list (Presets tab)
+    { id, name, birthday, ageText, gender }    // trip travellers are name copies, not refs
+  ]
 }
 ```
 - **Country + places:** one country per trip in v1; multiple cities within it. Multi-country
   trips are a v2 deferral (country could become an array, or places gain a country ref).
-- **Templates** are trip-independent (reusable across trips).
+- **Templates** (called "Presets" in the UI) are trip-independent (reusable across trips).
+  Can be built from scratch or saved from a trip's packing list.
+- **People** (called "Travellers" in the UI) are a master name list. A trip's `travellers[]`
+  stores **copies** of names, not references, so editing/removing a person never rewrites
+  past trips.
+- **Flights + stays** model travel legs and accommodation per trip (added in Session 3).
+- **Attachments** store files as Base64 data URLs (limited to ~5MB per file by localStorage
+  constraints). Viewed via blob URLs (not raw data URLs, which browsers block for security).
+  Included automatically in JSON export/import. IndexedDB upgrade noted for v2.
 - **weatherCache is per city** (nested under each place) so every city's last forecast shows
   offline independently.
 - **Packing categories:** seeded from defaults (Clothes, Toiletries, Documents, Tech,
-  Health/Meds, Misc) on a new list; the user can add/rename categories and items freely.
+  Health/Meds, Misc) on a new list; the user can add categories and items freely.
+- **Sanitization:** `store.js` uses a whitelist sanitizer (`sanitizeTrip`, `sanitizeAttachment`,
+  etc.) that rebuilds every object on load — unknown/malformed fields are dropped, so any new
+  field must be added to the sanitizer or it won't persist across reloads.
 
 ## 4. Weather (Open-Meteo, keyless) — per city
 - **Geocoding:** `geocoding-api.open-meteo.com` — user types a city name, picks from
@@ -103,8 +123,10 @@ storage so it never collides with other family apps.
     (India as base), each an `.entity-card` with a status badge (Planning / Upcoming / In
     progress / Completed).
   - **Trip detail** — sub-sections Plan (country, cities, travellers, flights, accommodation,
-    notes), **Trip Days** (combined itinerary + per-city weather), Packing (categorised
-    checklist, manual add, save/apply preset), and **Itinerary** (printable summary).
+    notes, **attachments**), **Trip Days** (combined itinerary + per-city weather), Packing
+    (categorised checklist, manual add, save/apply preset), and **Itinerary** (printable
+    summary with adaptive **Save/Export**: PDF on desktop via html2canvas + jsPDF, JPEG on
+    mobile via html2canvas).
   - **Presets** — master **Travellers** list + reusable **Packing presets** (buildable from
     scratch or saved from a trip). All shown as consistent `.entity-cards`.
   - **Personalize** — **Appearance** (11 colour palettes + Custom, with a contrast guard) and
@@ -129,3 +151,5 @@ storage so it never collides with other family apps.
 - Multiple destination **countries** per trip (country becomes an array, or places carry a
   country ref) — v1's country + `places[]` shape leaves room for this.
 - Per-city date ranges (each place gets its own sub-dates within the trip).
+- **Attachment storage upgrade:** move from Base64 in localStorage (~5MB cap per file) to
+  File API / IndexedDB (~50MB+) for larger documents. Noted in FUTURE-ENHANCEMENTS.md.
