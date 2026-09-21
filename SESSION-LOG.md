@@ -523,3 +523,21 @@ PDF view/download works; Save/Export produces output.
 
 ### Status
 **Built (Travel Planner v1.0.1)** — bug fixes verified and pushing to GitHub.
+
+
+### Session 7 (cont.) — doc refresh
+
+Refreshed the three stale docs to match the current v1.0.1 app:
+
+- **SPEC-design.md:** header status → Built (v1.0.1); §3 data model now includes `flights[]`,
+  `stays[]`, `attachments[]` (with blob-URL and sanitizer notes), and top-level `people[]`;
+  §7 trip detail mentions attachments and adaptive Save/Export (PDF desktop / JPEG mobile);
+  §8 deferred adds the IndexedDB attachment storage upgrade.
+- **userguide.html:** version 1.0.0 → 1.0.1; Itinerary section button renamed from
+  "Print / Save as PDF" to "Save / Export" with PDF/JPEG clarification; attachments bullet
+  now mentions the 5MB-per-file cap.
+- **overview.html:** version chip → v1.0.1; brand colour `#1f7a6d` → `#0f8a7e` (heading +
+  footer); feature list expanded to cover flights, stays, attachments, itinerary export,
+  palette personalisation, and reusable presets.
+
+No SW cache bump needed — these are standalone HTML docs, not part of the cached app shell.
