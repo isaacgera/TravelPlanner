@@ -55,6 +55,9 @@ export function save(data) {
     return true;
   } catch (err) {
     console.error("Travel Planner: failed to save data.", err);
+    if (err.name === "QuotaExceededError" || (err.code && err.code === 22)) {
+      console.warn("Travel Planner: localStorage quota exceeded — large attachments are the most likely cause.");
+    }
     return false;
   }
 }
@@ -127,6 +130,16 @@ function sanitizeTrip(t) {
     packing: Array.isArray(t.packing) ? t.packing.filter(isObject).map(sanitizeCat) : [],
     flights: Array.isArray(t.flights) ? t.flights.filter(isObject).map(sanitizeFlight) : [],
     stays: Array.isArray(t.stays) ? t.stays.filter(isObject).map(sanitizeStay) : [],
+    attachments: Array.isArray(t.attachments) ? t.attachments.filter(isObject).map(sanitizeAttachment) : [],
+  };
+}
+
+function sanitizeAttachment(a) {
+  return {
+    id: str(a.id) || uid("attachment"),
+    name: str(a.name),
+    type: str(a.type),
+    data: str(a.data),   // Base64 data URL — kept as-is
   };
 }
 

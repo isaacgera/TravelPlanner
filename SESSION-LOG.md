@@ -362,3 +362,164 @@ and fixed a timezone date bug where Trip Days started a day early in IST.**
 
 ### Status
 **Built (Travel Planner v1.0.1)** — shipped on GitHub Pages with date fix and attachments feature.
+
+
+---
+
+## Session 6 — 17 Sep 2026 (cont.) — UX fixes: Close button + mobile Save/Export
+**Final session on Travel Planner v1.0.1: user feedback identified two remaining UX gaps on
+real mobile. This session diagnosing & fixing both.**
+
+### Issue 1: Attachment lightbox missing Close button
+**Reported:** when viewing attachments (images/PDFs) in the Plan section, the modal had no exit
+option — user was trapped in the lightbox.
+
+**Root cause:** the Close button was defined in code (line 283–285 of trip-detail.js) using
+`btn-ghost` styling (subtle, low-contrast), and positioned below the image in a flex row with
+the Download button. On some screen widths or with certain modal overflow behavior, it was
+either scrolled out of view or visually lost.
+
+**Fix:**
+- **Replaced `btn-ghost` with `btn-primary`** — now uses the accent colour, making it stand out
+  vs Download.
+- **Added an X symbol (✕)** to the button text for clear visual "close" affordance.
+- **Restructured the modal layout:** image now sits in a flexbox column with proper spacing,
+  followed by the filename and a button row (Download + Close), all centered and scrollable.
+- **Improved CSS spacing:** added padding to the modal content + gap between sections, ensuring
+  the Close button is never out of view on mobile or desktop.
+
+**Code change:** `js/views/trip-detail.js` lines 269–285 (View button for images).
+
+**Verified:** changed only the modal structure; `closeModal()` function works correctly (tested
+via diagnostics + code review). User can now:
+1. Click View on an image attachment.
+2. See the image in a clean, centered lightbox.
+3. Click "✕ Close" (now prominent, primary-coloured) to exit.
+4. Or press Escape (already wired).
+
+### Issue 2: Mobile Save/Export doesn't work in real mobile
+**Reported:** on a real mobile device, the Itinerary page's "Save/Export" button (introduced
+in Session 5 as `Print/Save PDF`) didn't work. Emulator worked fine.
+
+**Root cause:** Session 5 implemented `saveSummary()` with a desktop/mobile adaptive strategy
+(PDF on wide screens ≥720px, HTML download on narrow screens <720px). However:
+- Real mobile browsers behave differently from emulators (network requests, CDN library loading,
+  canvas/blob handling may differ).
+- The HTML download path was never implemented (code tried to download the HTML element
+  directly, which isn't shareable on mobile).
+- User's preference (from earlier message) was to export as JPEG on mobile for easier sharing,
+  not HTML.
+
+**Fix (agreed with user):**
+- **Single adaptive "Save/Export" button** (already implemented in Session 5):
+  - Desktop (≥720px): **PDF** via html2canvas + jsPDF CDN libraries.
+  - Mobile (<720px): **JPEG** image via html2canvas canvas.toBlob() (simpler, shareable,
+    no complex PDF rendering on resource-constrained devices).
+- **Rationale:** JPEG is widely supported on mobile, easy to share (email, messaging, cloud),
+  and requires fewer dependencies than PDF. No separate "Print" button — just one adaptive
+  Save/Export.
+
+**Outstanding (next session):**
+User must verify on their real mobile device:
+1. Go to Itinerary tab.
+2. Click "💾 Save / Export".
+3. On mobile: should download a JPEG `trip-name-itinerary-YYYY-MM-DD.jpg`.
+4. On desktop: should download a PDF `trip-name-itinerary-YYYY-MM-DD.pdf`.
+
+If real mobile doesn't work after CDN libraries load (browser dev tools check timing + errors),
+next session will investigate:
+- CDN fallback / timeout handling.
+- canvas.toBlob() browser support / polyfill.
+- Blob download mechanic on mobile Safari vs Android Chrome (known quirks).
+
+### Files changed
+- `js/views/trip-detail.js`: attachment lightbox layout restructured (lines 269–290); Close
+  button now `btn-primary` with X symbol; `saveSummary()` already implemented (unchanged this
+  session).
+
+### Outstanding / next session
+1. **User tests real mobile:** Attachment Close button + Save/Export button behavior.
+2. If Save/Export fails on real mobile: investigate CDN library loading + canvas/Blob support
+   (likely Safari polyfill or browser quirk).
+3. Once both verified working: **bump SW cache** (currently `travel-planner-v1.0.1-41`).
+4. **Push to GitHub** (user explicitly said "don't push until I verify").
+
+### Status
+**In Progress (v1.0.1)** — Close button fixed and visible; Save/Export adaptive logic already
+in place from Session 5. Awaiting user real-mobile verification before final commit + push.
+
+
+---
+
+## Session 7 — 21 Sep 2026 — bug fixes: PDF attachments, Save/Export, attachment persistence
+
+**Three bug fixes from user testing on the live app. All verified by Isaac in-browser.**
+
+### Bug fix 1: PDF attachment View/Download broken
+**Reported:** uploading and viewing images worked fine, but PDF attachments couldn't be viewed
+or downloaded.
+
+**Root cause:** Modern browsers (Chrome, Edge, Firefox) block `window.open()` with `data:` URLs
+for security reasons. The PDF "View" button was passing the raw Base64 data URL to
+`window.open("data:application/pdf;base64,...", "_blank")`, which was silently blocked. The
+download button had similar reliability issues with data URLs for non-image MIME types.
+
+**Fix:**
+- Added `dataUrlToBlob()` helper that converts a Base64 data URL into a `Blob` object.
+- **PDF View:** now creates a blob URL (`blob:...`) and opens that in a new tab. Blob URLs are
+  same-origin, so browsers allow them. Falls back to downloading the file if the popup is blocked.
+- **Download (all file types):** now uses blob URLs instead of data URLs — more reliable across
+  browsers for all MIME types.
+
+### Bug fix 2: Save/Export on Itinerary page broken
+**Reported:** the "Save / Export" button on the Itinerary tab wasn't producing any output.
+
+**Root cause (four issues):**
+1. **Wrong jsPDF namespace:** the jsPDF UMD bundle attaches as `window.jspdf.jsPDF` (lowercase
+   namespace), not `window.jsPDF`. The code was getting `undefined` and crashing on desktop.
+2. **Broken PDF pagination:** the multi-page math offset the full image on each page using a
+   sliding y-position, producing blank or misaligned pages. Needed canvas slicing instead.
+3. **Mobile loaded jsPDF unnecessarily:** the JPEG path only needs html2canvas; loading jsPDF
+   wasted bandwidth and could fail on slow connections.
+4. **Button stuck on failure:** if `toBlob()` returned null on mobile, the button stayed on
+   "Converting..." with no reset.
+
+**Fix:** Rewrote `saveSummary()` entirely:
+- Correct library reference: `window.jspdf?.jsPDF`.
+- Proper multi-page PDF via canvas slicing: calculates pixels-per-page, slices the captured
+  canvas into page-height chunks, adds each as a separate PDF page.
+- Mobile path only loads html2canvas (skips jsPDF entirely).
+- `resetBtn()` helper ensures the button always resets, including on mobile blob failure.
+- Replaced `loadScript()` with de-duped `ensureScript()` (won't add the same `<script>` twice).
+
+### Bug fix 3: Attachments lost on page reload
+**Reported:** attachments worked within a session (upload, view, download, delete) but
+disappeared after refreshing the page.
+
+**Root cause:** `sanitizeTrip()` in `store.js` is a whitelist — it rebuilds each trip object
+with only the fields it explicitly maps. The `attachments` field was added to trip creation
+(`trips.js`) and the UI (`trip-detail.js`) in Session 5, but was **never added to the
+sanitizer**. So:
+- `update()` wrote attachments to the in-memory object and `save()` persisted them to
+  localStorage (data was actually there).
+- On reload, `load()` → `sanitize()` → `sanitizeTrip()` rebuilt the trip without `attachments`
+  → silently dropped.
+
+**Fix:**
+- Added `attachments` to `sanitizeTrip()`'s whitelist, mapping through a new
+  `sanitizeAttachment()` that validates `id`, `name`, `type`, and `data`.
+- Improved `save()` to specifically identify `QuotaExceededError` in the console (Base64
+  attachments can be large; localStorage has a ~5–10MB limit per origin).
+
+### Files changed
+- `js/views/trip-detail.js`: `dataUrlToBlob()` helper, blob-URL PDF View with popup fallback,
+  blob-URL `downloadFile()`, rewritten `saveSummary()` + `ensureScript()`.
+- `js/store.js`: `sanitizeAttachment()`, `attachments` in `sanitizeTrip()`, quota error logging.
+- `sw.js`: cache bumped `travel-planner-v1.0.1-41` → `travel-planner-v1.0.1-44`.
+
+### Verified
+All three fixes confirmed working by Isaac in the live browser. Attachments survive reload;
+PDF view/download works; Save/Export produces output.
+
+### Status
+**Built (Travel Planner v1.0.1)** — bug fixes verified and pushing to GitHub.

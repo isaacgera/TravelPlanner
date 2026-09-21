@@ -263,12 +263,17 @@ function renderOverview(body, trip) {
               class: "btn btn-sm", type: "button",
               "aria-label": `View ${att.name}`, title: `View ${att.name}`,
               onclick: () => {
-                const modal = openModal(
-                  el("div", { style: "text-align:center;max-height:80vh;overflow:auto" }, [
-                    el("img", { src: att.data, style: "max-width:100%;max-height:100%;border-radius:6px" }),
-                    el("div", { style: "margin-top:1rem" }, [
-                      el("p", { class: "meta", text: att.name }),
-                      el("button", { class: "btn btn-sm", type: "button", onclick: () => downloadFile(att) }, "Download"),
+                openModal(
+                  el("div", { style: "display:flex;flex-direction:column;align-items:center;gap:1rem;max-height:80vh;overflow:auto;padding:1rem" }, [
+                    el("div", { style: "text-align:center;flex:1;display:flex;align-items:center;justify-content:center;width:100%;max-width:500px" }, [
+                      el("img", { src: att.data, style: "max-width:100%;max-height:70vh;border-radius:6px;object-fit:contain" }),
+                    ]),
+                    el("div", { style: "text-align:center;width:100%" }, [
+                      el("p", { class: "meta", style: "margin:0 0 .75rem 0", text: att.name }),
+                      el("div", { style: "display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap" }, [
+                        el("button", { class: "btn btn-sm", type: "button", onclick: () => downloadFile(att) }, "⬇️ Download"),
+                        el("button", { class: "btn btn-primary btn-sm", type: "button", onclick: closeModal }, "✕ Close"),
+                      ]),
                     ]),
                   ])
                 );
@@ -277,8 +282,17 @@ function renderOverview(body, trip) {
               class: "btn btn-sm", type: "button",
               "aria-label": `Open ${att.name}`, title: `Open ${att.name} in new tab`,
               onclick: () => {
-                const win = window.open(att.data, "_blank");
-                if (!win) announce("Could not open PDF. Your browser may block popups.", true);
+                const blob = dataUrlToBlob(att.data);
+                const url = URL.createObjectURL(blob);
+                const win = window.open(url, "_blank");
+                if (!win) {
+                  // Fallback: download instead if popup blocked
+                  downloadFile(att);
+                  announce("Browser blocked the popup — downloading instead.");
+                  URL.revokeObjectURL(url);
+                }
+                // Revoke after a delay so the tab has time to load
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
               },
             }, "👁️ View") : null),
             // Download button
@@ -793,7 +807,7 @@ function modalField(label, name, value, type) {
 function renderSummary(body, trip) {
   body.appendChild(
     el("div", { style: "display:flex;justify-content:flex-end;margin-bottom:.5rem" }, [
-      el("button", { class: "btn btn-sm no-print", type: "button", onclick: () => window.print() }, "\u{1F5A8} Print / Save PDF"),
+      el("button", { class: "btn btn-sm no-print", type: "button", id: "save-summary-btn", onclick: () => saveSummary(trip) }, "\u{1F4BE} Save / Export"),
     ])
   );
 
@@ -905,13 +919,132 @@ function weatherBanner(icon, text) {
   ]);
 }
 
-/** Download an attachment (Base64 data URL) to the user's device. */
+/** Convert a Base64 data URL to a Blob (works cross-browser for view + download). */
+function dataUrlToBlob(dataUrl) {
+  const [header, base64] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)?.[1] || "application/octet-stream";
+  const bytes = atob(base64);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+/** Download an attachment to the user's device via a Blob URL. */
 function downloadFile(att) {
+  const blob = dataUrlToBlob(att.data);
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = att.data;
+  link.href = url;
   link.download = att.name;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
   announce(`Downloading ${att.name}...`);
+}
+
+/** Download the itinerary summary as PDF (desktop) or image (mobile). */
+async function saveSummary(trip) {
+  const btn = document.getElementById("save-summary-btn");
+  const resetBtn = () => { if (btn) { btn.disabled = false; btn.textContent = "\u{1F4BE} Save / Export"; } };
+  const isMobile = window.innerWidth < 720;
+  const filename = `${(trip.name || "trip").replace(/[^a-z0-9 _-]/gi, "")}-itinerary-${new Date().toISOString().slice(0, 10)}`;
+
+  if (btn) { btn.disabled = true; btn.textContent = isMobile ? "Converting\u2026" : "Generating\u2026"; }
+
+  try {
+    const summary = document.querySelector(".summary");
+    if (!summary) { announce("Could not find the itinerary to export.", true); resetBtn(); return; }
+
+    // Load html2canvas (needed for both paths)
+    await ensureScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+    if (typeof window.html2canvas !== "function") throw new Error("html2canvas failed to load.");
+
+    const canvas = await window.html2canvas(summary, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+    });
+
+    if (isMobile) {
+      // Mobile: export as JPEG image
+      canvas.toBlob((blob) => {
+        if (!blob) { announce("Could not generate the image.", true); resetBtn(); return; }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${filename}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        announce("Itinerary exported as image.");
+        resetBtn();
+      }, "image/jpeg", 0.92);
+    } else {
+      // Desktop: export as multi-page PDF
+      // jsPDF UMD attaches as window.jspdf (lowercase), the constructor is window.jspdf.jsPDF
+      await ensureScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+      const JsPDFCtor = window.jspdf?.jsPDF;
+      if (!JsPDFCtor) throw new Error("jsPDF failed to load.");
+
+      const pdf = new JsPDFCtor({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 10;                             // mm each side
+      const usableW = pageW - margin * 2;            // ~190 mm on A4
+      const usableH = pageH - margin * 2;            // ~277 mm on A4
+
+      // Scale the captured canvas to fit the usable width
+      const imgW = usableW;
+      const imgH = (canvas.height * usableW) / canvas.width;
+
+      // If it fits on one page, just add it
+      if (imgH <= usableH) {
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, imgW, imgH);
+      } else {
+        // Slice the canvas into page-sized chunks and add one per page
+        const pxPerPage = (canvas.width * usableH) / usableW; // canvas-px height per PDF page
+        let srcY = 0;
+        let page = 0;
+
+        while (srcY < canvas.height) {
+          const sliceH = Math.min(pxPerPage, canvas.height - srcY);
+          // Draw a slice of the source canvas onto a temporary canvas
+          const slice = document.createElement("canvas");
+          slice.width = canvas.width;
+          slice.height = sliceH;
+          const ctx = slice.getContext("2d");
+          ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+          if (page > 0) pdf.addPage();
+          const sliceImgH = (sliceH * usableW) / canvas.width;
+          pdf.addImage(slice.toDataURL("image/png"), "PNG", margin, margin, imgW, sliceImgH);
+
+          srcY += sliceH;
+          page++;
+        }
+      }
+
+      pdf.save(`${filename}.pdf`);
+      announce("Itinerary exported as PDF.");
+      resetBtn();
+    }
+  } catch (err) {
+    announce(`Could not export: ${err.message}`, true);
+    resetBtn();
+  }
+}
+
+/** Load a CDN script once (de-duped). */
+function ensureScript(src) {
+  if (document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
+  });
 }
