@@ -1,0 +1,9 @@
+# Svelte Option B experiment — Node/Vite tooling artifacts (never commit)
+node_modules/
+dist/
+.vite/
+
+# Local env / editor cruft
+.DS_Store
+Thumbs.db
+*.local

@@ -42,7 +42,7 @@
 - [x] Trips segregated Domestic/International (India base) + status badges
 - [x] Backup moved from 3-dot menu to sidebar + About-page card
 
-## Build — Option B (Svelte 5) experiment, later
-- [ ] Scaffold `experiments/svelte-version/` (Vite + Svelte 5) — flag Node/Windows tooling
-- [ ] Reimplement the same spec; capture DX/bundle-size learnings vs Option A
-- [ ] Comparison note (kept separate from the shipped app's docs)
+## Build — Option B (Svelte 5) experiment — done (Session 8, 30 Sep 2026)
+- [x] Scaffold `experiments/svelte-version/` (Vite + Svelte 5) — flagged Node/Windows tooling; Node v24.21.0 installed, Zscaler proxy cert handled via `NODE_EXTRA_CA_CERTS`
+- [x] Reimplement the same spec; capture DX/bundle-size learnings vs Option A
+- [x] Comparison note (kept separate from the shipped app's docs) → `experiments/svelte-version/COMPARISON.md`

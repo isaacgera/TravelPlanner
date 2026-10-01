@@ -541,3 +541,144 @@ Refreshed the three stale docs to match the current v1.0.1 app:
   palette personalisation, and reusable presets.
 
 No SW cache bump needed — these are standalone HTML docs, not part of the cached app shell.
+
+
+---
+
+## Session 8 — 30 Sep 2026 — Option B (Svelte 5 + Vite) learning experiment
+**Built the long-planned Option B: a full Svelte 5 + Vite reimplementation of the shipped
+app, as a parallel learning experiment under `experiments/svelte-version/`, against the same
+SPEC. This does NOT change the shipped app (still v1.0.1) or its backlog status — it's an
+apples-to-apples experiment. Built to closely match the shipped app throughout (Isaac's ask),
+verified on desktop + a real phone.**
+
+### Toolchain setup (significant, and a reusable learning for this laptop)
+Getting a Node build to run on the managed BT laptop was real work:
+- **Node v24.21.0** installed into the user folder (no admin); fixed the **user `Path`** (a
+  separate `Node` env var does nothing — the folder must go *inside* `Path`).
+- `npm install` first failed with **`UNABLE_TO_GET_ISSUER_CERT_LOCALLY`** — BT's **Zscaler**
+  TLS-inspecting proxy re-signs HTTPS with a corporate CA Node doesn't trust. **Fixed properly**
+  by exporting the Zscaler root cert (`certmgr.msc` → Trusted Root) and setting
+  **`NODE_EXTRA_CA_CERTS`** + `npm config set cafile` — *not* by disabling TLS. This fix is
+  permanent for all future Node work here.
+- npm 11 blocks package install scripts by default; approved `esbuild` and `core-js`.
+
+### Architecture (Svelte-idiomatic port of the same design)
+- **Reactive `$state` runes store** (`src/lib/store.svelte.js`), namespaced **`tpsvelte_`** so
+  the sandbox can never read/overwrite the shipped app's real `travelplanner_` data. Full
+  sanitizers/migrate/export/import ported. No manual re-render calls anywhere (the big DX win).
+- **`weather.js`** — Open-Meteo geocoding + per-city forecast ported unchanged (plain async).
+- **Reactive router** (`router.svelte.js`) with hover-preview of nav content; **`theme.svelte.js`**
+  (11 palettes + custom, contrast guard); ~30 `.svelte` components/views + modals.
+- **Shared `app.css`** ported from the shipped tokens/`styles.css` so the look matches; full
+  sidebar (sub-navs with hover-reveal + content preview, collapse-to-icon-rail chevron),
+  responsive sidebar↔bottom-tab-bar, mobile top bar, Forjé footer.
+- **PDF (desktop) / JPEG (mobile) export** via **vendored** `html2canvas` + `jsPDF` (npm, not
+  CDN — honours the no-CDN rule), lazy-loaded with dynamic `import()` so they're separate chunks.
+
+### Feature parity
+All v1 features ported and verified: trips (create/edit/delete, Domestic/International grouping,
+status badges), travellers (master list + per-trip with opt-in save), cities via geocoding,
+per-city weather with 16-day horizon + offline banners, packing + reusable presets, flights,
+accommodation, attachments (upload/view/download, image lightbox, PDF open), printable itinerary
+with adaptive export, 11 palettes + custom, light/dark, JSON export/import.
+
+### Verified
+- **`npm run build` clean** — 377 modules, 10.93s, no errors. Core app gzips to **~43 kB**
+  (129 kB raw) *including the Svelte runtime*; the heavy export libs lazy-split into separate
+  chunks (not in the initial load).
+- **Deployed via Netlify drop** of `dist/`; **Isaac tested on a real phone — works fine.**
+- Wrote **`experiments/svelte-version/COMPARISON.md`** (Option A vanilla vs Option B Svelte:
+  DX, build/tooling cost, bundle size, supply-chain surface).
+
+### Known gaps in the experiment (deliberate)
+- **No PWA layer** (no service worker/manifest) — the shipped app added these as a separate pass.
+- **Delete confirms use `window.confirm()`**, not the shipped app's styled confirm modal.
+- **Transitive `dompurify` vulnerability** via jsPDF (`npm audit`: 1 moderate, 1 critical) — not
+  exploitable in our usage (canvas→image PDF path, never sanitising untrusted HTML; local-first).
+  The vanilla app's zero-dependency stance avoids this entirely — a genuine contrast point.
+
+### Verdict
+For this small, local-first, offline-first app family, **vanilla remains the better default**
+(no toolchain, no supply-chain surface, trivial hosting). Svelte's reactivity + component model
+genuinely reduce boilerplate and would pay off more on something larger/more dynamic. The build
+step and (on this laptop) the Zscaler proxy friction are the main costs.
+
+### Files
+New: everything under `experiments/svelte-version/` (scaffold, `src/**`, `COMPARISON.md`,
+`README.md`). Shipped app files unchanged. Updated docs: this log; `SPEC-tasks.md` (Option B
+boxes ticked).
+
+### Status
+**Shipped app unchanged: Built (Travel Planner v1.0.1).** Option B experiment is complete and
+verified. The Ideas.md row stays **Built (Travel Planner v1.0.1)** — the experiment does not
+change shipped status.
+
+
+---
+
+## Session 8 (cont.) — 30 Sep 2026 — glass polish + location widget
+**Post-experiment enhancements to the Svelte Option B build (still experiment-only; shipped
+app untouched).**
+
+### Liquid-glass visual pass
+- Added an iOS-style "liquid glass" treatment across the Svelte app: glass tokens (light +
+  dark), an ambient palette-driven **aurora backdrop** with a slow drift animation, frosted
+  translucent chrome (sidebar, tab bar, top bar), glass cards/modals/seg-switcher/swatches,
+  specular edge highlights, and a **sweeping glint** on card hover. Tuned opacity/blur so
+  light↔dark stays clearly distinct and text stays legible; `prefers-reduced-motion` stops the
+  drift/glint; `@supports` fallback to solid surfaces where `backdrop-filter` is unsupported;
+  print forces solid white.
+
+### Fixed: sidebar theme toggle
+- The sidebar light/dark toggle wasn't firing — the full-width centred credit text overlaid the
+  small absolute toggle button and swallowed clicks. Fixed with `z-index` on the button +
+  `pointer-events:none` on the credit text. (Pre-dated the glass work; the Personalization
+  toggle always worked, which pinpointed it.)
+
+### New feature: global location + home widget
+- Added a top-row widget on **every page**: an opt-in **device-GPS** weather chip
+  (geolocation → Open-Meteo reverse-geocode → current conditions, showing **City, Country** +
+  temp/condition, cached 30 min, degrades gracefully on deny/unavailable) and a **Home** button
+  (→ Trips). Opt-in tap keeps the local-first stance (only coords go out, to keyless Open-Meteo).
+  Added `currentConditions()` + `reverseGeocode()` to `weather.js`; new `LocationBar.svelte`.
+- Trips hero heading shortened to **"My plans"** and the band tightened. Reworked the top area
+  into a proper flex row (badge left, widget right) so it reads as one tidy line rather than two
+  floating islands.
+
+Note: GPS is blocked on the managed laptop, so the located state can only be verified on a phone
+(via the Netlify build). Status unchanged: experiment-only; shipped app stays Built (v1.0.1).
+
+
+### Fix: location widget showed "My location" + wrong reading
+Real-device (iPhone via Netlify) testing surfaced two bugs in the location widget:
+- **Root cause:** it used a non-existent Open-Meteo reverse-geocoding endpoint — Open-Meteo's
+  geocoding API is **search/name-only; it does NOT do reverse geocoding** (confirmed via
+  Open-Meteo issue #661 / discussion #698). So the coords→city lookup always failed and fell
+  back to the literal "My location" label; the stale/low-accuracy position also made the weather
+  look off.
+- **Fix:** swapped the reverse lookup to **BigDataCloud's free, keyless, CORS-friendly
+  client-side reverse-geocode API** (still local-first — only coords leave the device). Now shows
+  real **City, Country**. Also set geolocation `enableHighAccuracy: true` + `maximumAge: 60s` so a
+  tap gets a fresh, accurate fix, and improved the fallback chain (city → region → neutral label).
+- Files: `weather.js` (`reverseGeocode` rewritten), `LocationBar.svelte`. Needs a `npm run build`
+  + Netlify redrop to verify the located state on the phone.
+
+### Other real-device notes
+- **Glass on iOS Safari is muted** vs desktop Chrome — WebKit renders `backdrop-filter` more
+  conservatively (known quirk). Left as-is; a future iOS-specific glass tune could sharpen it.
+
+Status: **experiment complete** (shipped app untouched — still Built (Travel Planner v1.0.1);
+Ideas.md row unchanged). Isaac verifying the location fix on the phone after the next redrop.
+
+
+### Location fix verified — 30 Sep 2026
+Isaac rebuilt + redropped to Netlify and confirmed on the iPhone: the location widget now shows
+the correct **City, Country** and accurate current weather. The BigDataCloud reverse-geocode swap
++ high-accuracy geolocation resolved both reported bugs.
+
+**Session 8 wrapped.** Svelte Option B experiment complete and verified on desktop + real phone.
+Shipped app untouched — **Built (Travel Planner v1.0.1)**; Ideas.md row unchanged (experiment does
+not alter shipped status). Documented caveats stand: iOS Safari renders the glass more subtly than
+desktop; transitive dompurify vuln via jsPDF (not exploitable in our usage); no PWA layer;
+`window.confirm()` used for deletes. Comparison writeup in `experiments/svelte-version/COMPARISON.md`.
