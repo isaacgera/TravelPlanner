@@ -802,3 +802,76 @@ Must handle this fresh (context window pressure):
 - This is a common PWA debugging issue (expected).
 
 **Status:** In Progress (v1.0.2) — fixes complete but need cache bust + verification in next session.
+
+---
+
+## Session 8 — 5 Oct 2026 — v1.0.2 cache/UI fixes shipped + iOS PWA import fix
+**Resumed from Session 7's blocked state. Verified the two v1.0.2 UI fixes were on disk,
+diagnosed why they weren't reaching the browser, fixed a real version-badge clipping bug and
+the sidebar layout, pushed v1.0.2 to GitHub, then diagnosed + fixed a data-import regression
+that only affected the installed iOS PWA.**
+
+### Cleared the Session 7 blocker
+- A ghost interactive `copy` prompt (prototype → live overwrite) was hanging the shell from the
+  previous session. Declined both overwrites (`js/trip-detail.js`, `js/weather.js` — 0 files
+  copied, nothing clobbered) and the shell was usable again.
+
+### v1.0.2 UI fixes (were written in Session 7 but not reaching the browser)
+- **Confirmed on disk:** the version-badge markup (`index.html`) and both appended CSS blocks
+  (version badge + sidebar scroll) were present. The earlier grep "misses" were just the
+  space-in-path tripping the include pattern, not missing code.
+- **Root cause they weren't visible:** stale service worker cache. A plain Ctrl+Shift+R doesn't
+  evict an active SW's cache; the SW keeps serving old assets. Confirmed by viewing in an
+  Incognito/private window (no SW) where the fixes rendered correctly.
+- **Real bug found (not just cache): version badge clipped.** The `v1.0.2` badge was nested
+  *inside* `.nav-brand-name`, which has `white-space:nowrap; overflow:hidden; text-overflow:
+  ellipsis`. At the ~200px sidebar width the title truncated to "Travel Pla…" and the badge was
+  clipped off. First fix split name/version into a flex row (`flex:none` badge). Then, on Isaac's
+  preference, **moved the version out of the brand line entirely** to its own line in the sidebar
+  footer, under "All rights reserved" (`.brand-footer-version`, hidden when collapsed).
+- **Sidebar "awkward height" fix.** The desktop sidebar was `position:relative; height:100vh`, so
+  on a tall scrolling page it scrolled away leaving an empty gap. Changed to
+  `position:sticky; top:0; align-self:start` so it pins full-height while content scrolls beside
+  it (standard grid sticky-sidebar pattern; `align-self:start` is what lets sticky engage inside
+  the `1fr` grid row). Kept the earlier nav-list `overflow-y:auto` scope for genuinely short windows.
+
+### Pushed v1.0.2 to GitHub
+- Committed the whole v1.0.2 release (the Session 6 ported features had never been committed):
+  `trip-detail.js` edit/reorder, `weather.js` UTC last-day fix, `styles.css`, `app.js` version
+  bump, `ui.js` modal announce, `sw.js`, plus this session's sidebar/version fixes.
+- `prototypes/` deliberately left untracked (sandbox, not shipped to the public Pages repo).
+- Pushed to `origin/main` (`isaacgera/TravelPlanner`) → GitHub Pages.
+
+### iOS PWA data-import regression — diagnosed + fixed
+- **Symptom:** import worked in a Safari *tab* and on desktop, but in the **installed iPhone PWA**
+  selecting the backup file did nothing — no confirm dialog, no error.
+- **Root cause:** the change-handler used `await file.text()` (`Blob.text()`). In standalone iOS
+  WebKit the Files picker backgrounds the app, and that promise can silently never resolve on
+  return. Classic iOS-standalone API divergence (per the `ios-pwa-patterns` rule).
+- **Fix:** replaced `file.text()` with an event-based `FileReader.readAsText()` (new
+  `readFileText()` helper), moved the `input.value=""` reset to *after* the read so the File
+  reference survives the suspend/resume, and added a visible error if the read genuinely fails.
+- **Diagnosis method (per the rule):** added a TEMP on-screen debug readout to the import flow
+  (there's no console in an installed PWA) reporting each step. Desktop showed the full clean
+  trace; after a proper close/reopen so the new SW activated, the iPhone showed the **same full
+  trace and the data imported**. The earlier "still broken" test was the old SW still being served.
+- **Diagnostic removed** before shipping (per the rule); the `readFileText` fix stays. Noted the
+  backup file is ~227 KB (Base64 attachments) — large but handled fine.
+
+### SW cache
+- Bumped repeatedly through the session; final clean value **`travel-planner-v1.0.2-8`**
+  (the temporary `-7-dbg` diagnostic build was replaced).
+
+### Files changed
+`index.html` (version moved to footer), `css/styles.css` (sticky sidebar, footer version,
+nav-list scroll), `js/app.js` (FileReader import fix + version bump already present), `sw.js`
+(cache), `SESSION-LOG.md`. Plus the previously-uncommitted Session 6 v1.0.2 feature files.
+
+### Verified
+- Desktop: version in footer, sticky sidebar, import full trace + dialog — all good.
+- **iPhone installed PWA: import now works** (Isaac confirmed, same trace as desktop, data loads).
+- Diagnostics clean after diagnostic removal (editor language server; Node not installed).
+
+### Status
+**Built (Travel Planner v1.0.2)** — v1.0.2 shipped to GitHub Pages; iOS PWA import regression
+fixed and verified on the real iPhone. Final clean build pending push.
