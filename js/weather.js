@@ -127,5 +127,14 @@ export function describeCode(code) {
 function parseDate(s) { if (!s) return null; const d = new Date(s + "T00:00:00"); return isNaN(d) ? null : d; }
 function startOfDay(d) { if (!d) return null; const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
-function isoDate(d) { return d.toISOString().slice(0, 10); }
+/** Local YYYY-MM-DD. Using toISOString() here converts to UTC, which in
+ *  timezones ahead of UTC (e.g. IST, UTC+5:30) rolls local midnight back to the
+ *  previous day — that shifted the requested range earlier and dropped the
+ *  trip's final day from the forecast. Format from local components instead. */
+function isoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 function round(n) { return Number.isFinite(+n) ? Math.round(+n) : null; }

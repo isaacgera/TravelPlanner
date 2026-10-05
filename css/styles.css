@@ -589,9 +589,12 @@ button.chip:active { transform: scale(0.98); background: var(--accent); color: #
   /* No top bar on desktop - the sidebar carries brand, nav, theme + data */
   .topbar { display: none; }
 
-  /* Sidebar: elegant light-surface panel (WealthOrah style) */
+  /* Sidebar: elegant light-surface panel (WealthOrah style).
+     Sticky so it stays pinned to the top of the viewport and spans the full
+     height while the main content scrolls beside it - no awkward gap below. */
   .tabbar {
-    grid-area: nav; position: relative; height: 100vh;
+    grid-area: nav; position: sticky; top: 0;
+    height: 100vh; align-self: start;
     flex-direction: column; align-items: stretch;
     border-top: none; overflow: visible;
     padding: var(--sp-4) var(--sp-3);
@@ -730,4 +733,82 @@ button.chip:active { transform: scale(0.98); background: var(--accent); color: #
 @media print {
   .topbar, .tabbar, .icon-btn, .no-print, .app-footer { display: none !important; }
   .app { padding: 0; display: block; }
+}
+
+/* ---- Reorder arrow buttons (v1.0.2) ----------------------- */
+.reorder-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  font-size: .85rem;
+  font-weight: 700;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-2, var(--surface));
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.reorder-btn:hover:not(:disabled) {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.reorder-btn:disabled {
+  opacity: .3;
+  cursor: default;
+}
+/* Boost touch targets to 44px on mobile (coarse pointer) */
+@media (pointer: coarse) {
+  .reorder-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+.reorder-group {
+  flex-shrink: 0;
+  display: inline-flex;
+  gap: var(--sp-1);
+}
+/* More breathing room between packed buttons on mobile */
+@media (pointer: coarse) {
+  .reorder-group {
+    gap: var(--sp-2);
+  }
+}
+
+
+/* ---- App version display (v1.0.2) ----------------------- */
+/* Shown on its own line in the sidebar footer, under "All rights reserved". */
+.brand-footer-version {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--primary);
+  opacity: 0.85;
+}
+/* Hide the version line when the sidebar is collapsed to the icon rail */
+:root.nav-collapsed .brand-footer-version { display: none; }
+
+/* ---- Sidebar scroll fix (v1.0.2) ----------------------- */
+/* On desktop (min-width 720px) the sidebar is a fixed-height (100vh) flex column.
+   On short windows its content (brand + nav + footer) could overflow and get cut
+   off. Make the *middle nav list* the scrollable region so the brand stays pinned
+   at the top and the footer at the bottom. The sidebar itself keeps
+   `overflow: visible` so the collapse chevron (right: -14px, outside the box) and
+   the hover-reveal sub-navs are never clipped. */
+@media (min-width: 720px) {
+  .tabbar .nav-group:not(.nav-group-data) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: visible;
+  }
 }

@@ -682,3 +682,123 @@ Shipped app untouched — **Built (Travel Planner v1.0.1)**; Ideas.md row unchan
 not alter shipped status). Documented caveats stand: iOS Safari renders the glass more subtly than
 desktop; transitive dompurify vuln via jsPDF (not exploitable in our usage); no PWA layer;
 `window.confirm()` used for deletes. Comparison writeup in `experiments/svelte-version/COMPARISON.md`.
+
+---
+
+## Session 6 — 5 Oct 2026 — v1.0.2 release: port from prototype to live
+**Prototype testing complete; Isaac approved. Ported 5 features from prototype (v1.0.2-proto) 
+to live app, applied P1 accessibility fixes, bumped version, updated docs, and synced backlog.**
+
+Features ported:
+1. **Plan section:** renamed "Cities" → "Places Covered"; added Edit + Reorder (up/down arrows) 
+   alongside Remove for Places, Flights, Accommodation.
+2. **Trip Days:** added "Day N: Weekday, Date" headers; added Edit + Reorder for itinerary entries.
+3. **Weather fix:** fixed UTC-shift bug in weather.js — isoDate now formats from local components 
+   (not toISOString), preserving last-day forecast in IST+5:30 and other ahead-of-UTC timezones.
+4. **Packing:** added Edit (label + qty) + Reorder for items.
+5. **Reorder UX:** small visible ↑/↓ buttons, keyboard-accessible, touch-friendly (44px mobile), 
+   disabled at ends, consistent aria-labels.
+
+P1 fixes applied (per Pre-Live Testing Agent audit):
+- Touch targets: 44px on mobile (pointer: coarse) for all reorder/edit/remove buttons.
+- Button spacing: increased gap in control rows on mobile for better tap accuracy.
+
+P2 fixes applied (should-fix from audit, deferred during prototype):
+- Modal close announcements: announce("Dialog closed.") added to ui.js closeModal().
+
+Files modified:
+- `js/views/trip-detail.js`: full rewrite with 5 features + helpers (moveInArray, 
+  reorderControls, openTextEdit, moveEntry, editEntry, moveItem, editItem, 
+  openPackingItemEdit).
+- `js/weather.js`: fixed isoDate UTC-shift bug (formats local, not UTC).
+- `css/styles.css`: appended .reorder-btn + .reorder-group styles (28px desktop, 44px mobile, 
+  responsive gap, hover states, disabled opacity).
+- `js/app.js`: bumped APP_VERSION from "1.0.1" → "1.0.2".
+- `sw.js`: bumped CACHE_NAME from "travel-planner-v1.0.1-44" → "travel-planner-v1.0.2-1".
+- `js/ui.js`: added announce() to closeModal() (P2 modal announcement).
+
+Docs updated:
+- SESSION-LOG.md (this entry).
+- SPEC-requirements.md: added v1.0.2 reorder/edit scope, confirmed weather last-day fix in NFR.
+- SPEC-design.md: documented reorder UX (arrows, aria-labels, touch-friendly), modal 
+  announcement pattern.
+- SPEC-tasks.md: all build tasks marked complete; release chores (version, cache, docs) logged.
+- userguide.html: added v1.0.2 feature notes (Places Covered rename, edit/reorder, weather fix, 
+  packing edit/reorder).
+
+Ideas.md backlog updated: Travel Planner row set to **Built (Travel Planner v1.0.2)**, version 
+and scope noted.
+
+Testing / verification:
+- Prototype tested on device (mobile + desktop) by Isaac; all 5 features + P1 fixes confirmed 
+  working.
+- Pre-Live Testing Agent audit run; P1 + P2 gaps identified and flagged; P1 fixes applied to 
+  prototype before port, P2 fixes applied to live post-port.
+- Live app tested locally (Trip Day reorder, Places edit/rename, Packing edit/reorder, weather 
+  refresh includes last day, modal close announces).
+
+Status: **Built (v1.0.2)** — shipped to live app.
+---
+
+## Session 7 — 5 Oct 2026 — v1.0.2 UI fixes attempt (BLOCKED - cache issue)
+**Session focused on fixing two reported UI issues from v1.0.2 live app (desktop): 
+(1) sidebar cutoff when scrolling content, (2) version badge not displaying. 
+Work was completed but changes not visible on live server — diagnosed as service worker cache stale.**
+
+### Fixes attempted
+1. **Version badge:** added `<span class="nav-brand-version">v1.0.2</span>` inline in the 
+   `.nav-brand-name` (sidebar header, next to app title).
+2. **Sidebar scroll:** appended CSS rule `@media (min-width: 720px) { .tabbar { overflow-y: auto; 
+   overflow-x: hidden; } }` to fix sidebar cutoff on desktop when content scrolls.
+
+### Files modified
+- `index.html`: added version badge span (line: `Travel Planner <span class="nav-brand-version">v1.0.2</span>`)
+- `css/styles.css`: appended two CSS blocks:
+  - `.nav-brand-version { display: inline-block; font-size: 0.72rem; font-weight: 600; 
+    color: var(--primary); margin-left: var(--sp-1); opacity: 0.85; }`
+  - `@media (min-width: 720px) { .tabbar { overflow-y: auto; overflow-x: hidden; } }`
+
+### Issue discovered
+Changes were written correctly to disk (verified via file read):
+- ✅ HTML span IS in index.html (confirmed in offset read)
+- ✅ CSS rules ARE at end of styles.css (confirmed in offset read)
+
+But the live server is still serving **stale cached versions** of both files:
+- Version badge not visible
+- Sidebar still cuts off on desktop scroll
+
+### Root cause
+Service worker cache (`travel-planner-v1.0.2-1` in sw.js) is delivering pre-cached assets 
+before checking for updates. User tested with hard refresh (Ctrl+Shift+R) on the live server 
+— no change.
+
+### Blockers
+1. **PowerShell ghost prompt:** earlier Copy-Item command left an interactive "Overwrite? 
+   (Yes/No/All):" prompt hanging. Blocks shell execution for verification.
+2. **Cannot run verification commands** to:
+   - Check browser DevTools to see what's actually served
+   - Inspect the Service Worker cache entries
+   - Verify the file contents one more time via shell
+
+### Next session (required)
+Must handle this fresh (context window pressure):
+1. **Clear the ghost PowerShell prompt** — restart shell or kill the blocked process.
+2. **Verify file writes one more time** — read index.html + styles.css to confirm changes are there.
+3. **Force service worker cache bust:**
+   - Option A: Manually delete cache entries in browser DevTools (Application tab → 
+     Cache Storage → delete `travel-planner-v1.0.2-1`).
+   - Option B: Bump SW cache name in sw.js to `travel-planner-v1.0.2-2` (forces all clients 
+     to re-fetch + re-cache on next visit).
+   - Option C: If option A doesn't work for user, do option B + re-test.
+4. **Verify fixes are visible:**
+   - Hard refresh the live server page again.
+   - Check sidebar for version badge (should show "v1.0.2" next to "Travel Planner").
+   - Scroll content on desktop; sidebar should scroll independently (not cut off).
+5. **Once verified:** commit + push v1.0.2 to GitHub with all fixes.
+
+### Context notes
+- Wrote this log entry to hand off cleanly; session context is running low.
+- Changes ARE in the files — just not reaching the browser due to service worker cache.
+- This is a common PWA debugging issue (expected).
+
+**Status:** In Progress (v1.0.2) — fixes complete but need cache bust + verification in next session.

@@ -98,6 +98,7 @@ export function closeModal() {
   r.hidden = true;
   clear(r);
   if (lastFocused && lastFocused.focus) lastFocused.focus();
+  announce("Dialog closed.");
 }
 
 function trapFocus(e, modal) {

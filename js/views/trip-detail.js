@@ -141,33 +141,46 @@ function renderOverview(body, trip) {
   travellersCard.appendChild(addT);
   body.appendChild(travellersCard);
 
-  // Cities
+  // Places Covered (was "Cities")
   const citiesCard = el("div", { class: "card" }, [
-    el("h3", { text: "Cities" }),
-    el("p", { class: "meta", text: "Add each place you'll visit to get its weather." }),
+    el("h3", { text: "Places Covered" }),
+    el("p", { class: "meta", text: "Add each place you'll visit to get its weather. Use the arrows to reorder." }),
   ]);
-  if (!trip.places.length) citiesCard.appendChild(el("p", { class: "meta", text: "No cities added yet." }));
-  trip.places.forEach((place) => {
+  if (!trip.places.length) citiesCard.appendChild(el("p", { class: "meta", text: "No places added yet." }));
+  trip.places.forEach((place, idx) => {
     citiesCard.appendChild(
       el("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.4rem 0;border-top:1px solid var(--border)" }, [
-        el("span", {}, [
+        el("span", { style: "min-width:0" }, [
           el("strong", { text: place.name }),
           el("span", { class: "meta", text: `  ${[place.admin, place.country].filter(Boolean).join(", ")}` }),
         ]),
-        el("button", {
-          class: "btn btn-danger btn-sm", type: "button", "aria-label": `Remove ${place.name}`, title: `Remove ${place.name}`,
-          onclick: async () => {
-            const ok = await confirmDialog({ title: "Remove city?", body: `Remove ${place.name} and its cached weather from this trip?`, confirmLabel: "Remove", danger: true });
-            if (!ok) return;
-            update((d) => { const t = findTrip(d, trip.id); t.places = t.places.filter((p) => p.id !== place.id); });
-            rerender(trip.id);
-          },
-        }, "Remove"),
+        el("div", { style: "display:flex;gap:.25rem;align-items:center;flex-shrink:0" }, [
+          reorderControls({
+            index: idx, count: trip.places.length, label: place.name,
+            onMove: (to) => { update((d) => moveInArray(findTrip(d, trip.id).places, idx, to)); rerender(trip.id); },
+          }),
+          el("button", {
+            class: "icon-btn btn-sm", type: "button", "aria-label": `Edit ${place.name}`, title: `Edit ${place.name}`,
+            onclick: () => openTextEdit({
+              title: "Edit place name", label: "Place name", value: place.name,
+              onSave: (val) => { update((d) => { const p = findTrip(d, trip.id).places.find((x) => x.id === place.id); if (p) p.name = val; }); announce("Place updated."); rerender(trip.id); },
+            }),
+          }, "Edit"),
+          el("button", {
+            class: "btn btn-danger btn-sm", type: "button", "aria-label": `Remove ${place.name}`, title: `Remove ${place.name}`,
+            onclick: async () => {
+              const ok = await confirmDialog({ title: "Remove place?", body: `Remove ${place.name} and its cached weather from this trip?`, confirmLabel: "Remove", danger: true });
+              if (!ok) return;
+              update((d) => { const t = findTrip(d, trip.id); t.places = t.places.filter((p) => p.id !== place.id); });
+              rerender(trip.id);
+            },
+          }, "\u00D7"),
+        ]),
       ])
     );
   });
   citiesCard.appendChild(
-    el("button", { class: "btn btn-sm btn-block", type: "button", style: "margin-top:.75rem", onclick: () => openAddCity(trip) }, "\uFF0B Add a city")
+    el("button", { class: "btn btn-sm btn-block", type: "button", style: "margin-top:.75rem", onclick: () => openAddCity(trip) }, "\uFF0B Add a place")
   );
   body.appendChild(citiesCard);
 
@@ -180,15 +193,19 @@ function renderOverview(body, trip) {
     ]),
   ]);
   if (!flights.length) flightsCard.appendChild(el("p", { class: "meta", text: "No flights added." }));
-  flights.forEach((fl) => {
+  flights.forEach((fl, idx) => {
     flightsCard.appendChild(
       el("div", { style: "padding:.5rem 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start" }, [
-        el("div", {}, [
+        el("div", { style: "min-width:0" }, [
           el("strong", { text: `${fl.label || "Flight"}${fl.flightNo ? " \u00B7 " + fl.flightNo : ""}` }),
           el("div", { class: "meta", text: `${fl.from || "?"} \u2192 ${fl.to || "?"}` }),
           el("div", { class: "meta", text: `${fmtDate(fl.date)}${fl.depTime ? " \u00B7 dep " + fl.depTime : ""}${fl.arrTime ? " \u00B7 arr " + fl.arrTime : ""}` }),
         ]),
-        el("div", { style: "display:flex;gap:.25rem" }, [
+        el("div", { style: "display:flex;gap:.25rem;align-items:center;flex-shrink:0" }, [
+          reorderControls({
+            index: idx, count: flights.length, label: fl.label || "flight",
+            onMove: (to) => { update((d) => moveInArray(findTrip(d, trip.id).flights, idx, to)); rerender(trip.id); },
+          }),
           el("button", { class: "btn btn-sm", type: "button", "aria-label": `Edit ${fl.label || "flight"}`, title: "Edit flight", onclick: () => openFlightForm(trip.id, fl.id) }, "Edit"),
           el("button", { class: "btn btn-danger btn-sm", type: "button", "aria-label": `Remove ${fl.label || "flight"}`, title: "Remove flight", onclick: () => { update((d) => { const t = findTrip(d, trip.id); t.flights = (t.flights || []).filter((x) => x.id !== fl.id); }); rerender(trip.id); } }, "\u00D7"),
         ]),
@@ -206,15 +223,19 @@ function renderOverview(body, trip) {
     ]),
   ]);
   if (!stays.length) staysCard.appendChild(el("p", { class: "meta", text: "No accommodation added." }));
-  stays.forEach((st) => {
+  stays.forEach((st, idx) => {
     staysCard.appendChild(
       el("div", { style: "padding:.5rem 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start" }, [
-        el("div", {}, [
+        el("div", { style: "min-width:0" }, [
           el("strong", { text: st.name || "Stay" }),
           st.city ? el("div", { class: "meta", text: st.city }) : null,
           el("div", { class: "meta", text: `${st.checkIn ? "In " + fmtDate(st.checkIn) : ""}${st.checkOut ? " \u00B7 Out " + fmtDate(st.checkOut) : ""}` }),
         ]),
-        el("div", { style: "display:flex;gap:.25rem" }, [
+        el("div", { style: "display:flex;gap:.25rem;align-items:center;flex-shrink:0" }, [
+          reorderControls({
+            index: idx, count: stays.length, label: st.name || "accommodation",
+            onMove: (to) => { update((d) => moveInArray(findTrip(d, trip.id).stays, idx, to)); rerender(trip.id); },
+          }),
           el("button", { class: "btn btn-sm", type: "button", "aria-label": `Edit ${st.name || "stay"}`, title: "Edit accommodation", onclick: () => openStayForm(trip.id, st.id) }, "Edit"),
           el("button", { class: "btn btn-danger btn-sm", type: "button", "aria-label": `Remove ${st.name || "stay"}`, title: "Remove accommodation", onclick: () => { update((d) => { const t = findTrip(d, trip.id); t.stays = (t.stays || []).filter((x) => x.id !== st.id); }); rerender(trip.id); } }, "\u00D7"),
         ]),
@@ -487,9 +508,9 @@ function renderDays(body, trip) {
     body.appendChild(el("p", { class: "meta", text: "Add a city in Overview to see weather alongside each day." }));
   }
 
-  days.forEach((iso) => {
+  days.forEach((iso, dayIdx) => {
     const dayObj = trip.itinerary.find((d) => d.date === iso) || { date: iso, entries: [] };
-    const card = el("div", { class: "card" }, [el("h3", { text: fmtDate(iso, { weekday: "long", day: "numeric", month: "long" }) })]);
+    const card = el("div", { class: "card" }, [el("h3", { text: `Day ${dayIdx + 1}: ${fmtDate(iso, { weekday: "long", day: "numeric", month: "long" })}` })]);
 
     // weather per city for this date
     if (trip.places.length) {
@@ -503,12 +524,24 @@ function renderDays(body, trip) {
     dayObj.entries.forEach((text, idx) => {
       entries.appendChild(
         el("div", { style: "display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start" }, [
-          el("span", { text: `\u2022 ${text}` }),
-          el("button", {
-            class: "icon-btn btn-sm", type: "button", "aria-label": "Remove entry", title: "Remove this entry",
-            style: "width:28px;height:28px",
-            onclick: () => { update((d) => removeEntry(d, trip.id, iso, idx)); rerender(trip.id); },
-          }, "\u00D7"),
+          el("span", { style: "flex:1;min-width:0", text: `\u2022 ${text}` }),
+          el("div", { style: "display:flex;gap:.25rem;align-items:center;flex-shrink:0" }, [
+            reorderControls({
+              index: idx, count: dayObj.entries.length, label: "plan",
+              onMove: (to) => { update((d) => moveEntry(d, trip.id, iso, idx, to)); rerender(trip.id); },
+            }),
+            el("button", {
+              class: "icon-btn btn-sm", type: "button", "aria-label": "Edit entry", title: "Edit this entry",
+              onclick: () => openTextEdit({
+                title: "Edit plan", label: "Plan for this day", value: text,
+                onSave: (val) => { update((d) => editEntry(d, trip.id, iso, idx, val)); announce("Plan updated."); rerender(trip.id); },
+              }),
+            }, "\u270E"),
+            el("button", {
+              class: "icon-btn btn-sm", type: "button", "aria-label": "Remove entry", title: "Remove this entry",
+              onclick: () => { update((d) => removeEntry(d, trip.id, iso, idx)); rerender(trip.id); },
+            }, "\u00D7"),
+          ]),
         ])
       );
     });
@@ -601,15 +634,22 @@ function renderPacking(body, trip) {
       ]),
     ]);
 
-    cat.items.forEach((item) => {
+    cat.items.forEach((item, itemIdx) => {
       const cb = el("input", { type: "checkbox", id: `item-${item.id}`, style: "width:auto;min-height:auto" });
       cb.checked = item.packed;
       cb.addEventListener("change", () => { update((d) => setPacked(d, trip.id, item.id, cb.checked)); rerender(trip.id); });
       card.appendChild(
         el("div", { style: "display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-top:1px solid var(--border)" }, [
           cb,
-          el("label", { for: `item-${item.id}`, style: `flex:1;margin:0;font-weight:400;${item.packed ? "text-decoration:line-through;color:var(--muted)" : ""}`, text: `${item.label}${item.qty > 1 ? "  \u00D7" + item.qty : ""}` }),
-          el("button", { class: "icon-btn btn-sm", type: "button", "aria-label": `Remove ${item.label}`, title: `Remove ${item.label}`, style: "width:28px;height:28px", onclick: () => { update((d) => removeItem(d, trip.id, item.id)); rerender(trip.id); } }, "\u00D7"),
+          el("label", { for: `item-${item.id}`, style: `flex:1;min-width:0;margin:0;font-weight:400;${item.packed ? "text-decoration:line-through;color:var(--muted)" : ""}`, text: `${item.label}${item.qty > 1 ? "  \u00D7" + item.qty : ""}` }),
+          el("div", { style: "display:flex;gap:.25rem;align-items:center;flex-shrink:0" }, [
+            reorderControls({
+              index: itemIdx, count: cat.items.length, label: item.label,
+              onMove: (to) => { update((d) => moveItem(d, trip.id, cat.category, itemIdx, to)); rerender(trip.id); },
+            }),
+            el("button", { class: "icon-btn btn-sm", type: "button", "aria-label": `Edit ${item.label}`, title: `Edit ${item.label}`, onclick: () => openPackingItemEdit(trip.id, item) }, "\u270E"),
+            el("button", { class: "icon-btn btn-sm", type: "button", "aria-label": `Remove ${item.label}`, title: `Remove ${item.label}`, onclick: () => { update((d) => removeItem(d, trip.id, item.id)); rerender(trip.id); } }, "\u00D7"),
+          ]),
         ])
       );
     });
@@ -650,6 +690,34 @@ function renderPacking(body, trip) {
     rerender(trip.id);
   });
   body.appendChild(addCat);
+}
+
+/** Edit a packing item's label + quantity. */
+function openPackingItemEdit(tripId, item) {
+  const labelInput = el("input", { type: "text", name: "label", value: item.label, placeholder: "Item", "aria-label": "Item name", autocomplete: "off" });
+  labelInput.id = "edit-item-label";
+  const qtyInput = el("input", { type: "number", name: "qty", value: String(item.qty || 1), min: "1", "aria-label": "Quantity", style: "max-width:90px" });
+  qtyInput.id = "edit-item-qty";
+  const form = el("form", { class: "stack" }, [
+    el("h3", { text: "Edit item" }),
+    el("div", { class: "field" }, [el("label", { for: labelInput.id, text: "Item" }), labelInput]),
+    el("div", { class: "field" }, [el("label", { for: qtyInput.id, text: "Quantity" }), qtyInput]),
+    el("div", { class: "modal-actions" }, [
+      el("button", { class: "btn btn-ghost", type: "button", onclick: closeModal }, "Cancel"),
+      el("button", { class: "btn btn-primary", type: "submit" }, "Save"),
+    ]),
+  ]);
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const label = labelInput.value.trim();
+    if (!label) { announce("Item can't be empty.", true); return; }
+    const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+    update((d) => editItem(d, tripId, item.id, label, qty));
+    closeModal();
+    announce("Item updated.");
+    rerender(tripId);
+  });
+  openModal(form);
 }
 
 function seedDefaults(trip) {
@@ -878,6 +946,63 @@ function renderSummary(body, trip) {
   body.appendChild(summary);
 }
 
+/* ---- reorder + edit UI helpers ---------------------------- */
+
+/** Move an array element from index `from` to index `to` in place. */
+function moveInArray(arr, from, to) {
+  if (!Array.isArray(arr)) return;
+  if (to < 0 || to >= arr.length || from < 0 || from >= arr.length) return;
+  const [el] = arr.splice(from, 1);
+  arr.splice(to, 0, el);
+}
+
+/**
+ * reorderControls({ index, count, label, onMove }) → a small group of
+ * visible Up/Down arrow buttons. Disabled at the ends. Keyboard-accessible
+ * and touch-friendly (shared across Places, Flights, Accommodation, Trip Days
+ * entries, and Packing items).
+ */
+function reorderControls({ index, count, label, onMove }) {
+  const upBtn = el("button", {
+    class: "icon-btn btn-sm reorder-btn", type: "button",
+    "aria-label": `Move ${label} up`, title: "Move up",
+    disabled: index === 0,
+    onclick: () => onMove(index - 1),
+  }, "\u2191");
+  const downBtn = el("button", {
+    class: "icon-btn btn-sm reorder-btn", type: "button",
+    "aria-label": `Move ${label} down`, title: "Move down",
+    disabled: index === count - 1,
+    onclick: () => onMove(index + 1),
+  }, "\u2193");
+  return el("span", { class: "reorder-group", style: "display:inline-flex;gap:.15rem" }, [upBtn, downBtn]);
+}
+
+/**
+ * Prompt-style inline edit modal for a single text value.
+ * openTextEdit({ title, label, value, onSave }).
+ */
+function openTextEdit({ title, label, value, placeholder, onSave }) {
+  const input = el("input", { type: "text", name: "v", value: value || "", placeholder: placeholder || "", autocomplete: "off" });
+  input.id = "edit-text-field";
+  const form = el("form", { class: "stack" }, [
+    el("h3", { text: title }),
+    el("div", { class: "field" }, [el("label", { for: input.id, text: label }), input]),
+    el("div", { class: "modal-actions" }, [
+      el("button", { class: "btn btn-ghost", type: "button", onclick: closeModal }, "Cancel"),
+      el("button", { class: "btn btn-primary", type: "submit" }, "Save"),
+    ]),
+  ]);
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const val = input.value.trim();
+    if (!val) { announce("Can't be empty.", true); return; }
+    onSave(val);
+    closeModal();
+  });
+  openModal(form);
+}
+
 /* ---- mutation helpers ------------------------------------- */
 function findTrip(d, id) { return d.trips.find((t) => t.id === id); }
 function dayFor(t, iso) {
@@ -887,12 +1012,23 @@ function dayFor(t, iso) {
 }
 function addEntry(d, tripId, iso, text) { dayFor(findTrip(d, tripId), iso).entries.push(text); }
 function removeEntry(d, tripId, iso, idx) { const day = findTrip(d, tripId).itinerary.find((x) => x.date === iso); if (day) day.entries.splice(idx, 1); }
+function editEntry(d, tripId, iso, idx, text) { const day = findTrip(d, tripId).itinerary.find((x) => x.date === iso); if (day && day.entries[idx] != null) day.entries[idx] = text; }
+function moveEntry(d, tripId, iso, from, to) { const day = findTrip(d, tripId).itinerary.find((x) => x.date === iso); if (day) moveInArray(day.entries, from, to); }
 function addItem(d, tripId, category, label, qty) {
   const cat = findTrip(d, tripId).packing.find((c) => c.category === category);
   if (cat) cat.items.push({ id: uid("item"), label, qty, packed: false });
 }
 function removeItem(d, tripId, itemId) {
   findTrip(d, tripId).packing.forEach((c) => { c.items = c.items.filter((i) => i.id !== itemId); });
+}
+function moveItem(d, tripId, category, from, to) {
+  const cat = findTrip(d, tripId).packing.find((c) => c.category === category);
+  if (cat) moveInArray(cat.items, from, to);
+}
+function editItem(d, tripId, itemId, label, qty) {
+  findTrip(d, tripId).packing.forEach((c) => c.items.forEach((i) => {
+    if (i.id === itemId) { i.label = label; i.qty = qty; }
+  }));
 }
 function setPacked(d, tripId, itemId, packed) {
   findTrip(d, tripId).packing.forEach((c) => c.items.forEach((i) => { if (i.id === itemId) i.packed = packed; }));
