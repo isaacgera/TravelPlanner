@@ -204,8 +204,10 @@ function initBackupMenu() {
   // doExport()/doImport() directly; this only wires the shared file input.
 
   importFile.addEventListener("change", async () => {
+    dbg("change fired");
     const file = importFile.files?.[0];
-    if (!file) return;
+    if (!file) { dbg("no file in input"); return; }
+    dbg(`file: ${file.name} (${file.size}b)`);
 
     let text;
     try {
@@ -214,9 +216,12 @@ function initBackupMenu() {
       // Blob.text() promise can silently never resolve on return; FileReader's
       // event-based read survives the suspend/resume. Reset the input only
       // AFTER the read so the File reference stays valid throughout.
+      dbg("reading...");
       text = await readFileText(file);
+      dbg(`read ok: ${text.length} chars`);
     } catch (err) {
       console.error("Travel Planner: import read failed.", err);
+      dbg(`read FAILED: ${err && err.message ? err.message : err}`);
       announce("Couldn't read that file. Try again, or re-save the backup to Files first.", true);
       importFile.value = "";
       return;
@@ -224,19 +229,45 @@ function initBackupMenu() {
     importFile.value = "";
 
     const result = parseImport(text);
+    dbg(`parse: ok=${result.ok}${result.ok ? ` trips=${result.summary.trips}` : ` err=${result.error}`}`);
     if (!result.ok) { announce(result.error, true); return; }
 
+    dbg("opening confirm dialog");
     const ok = await confirmDialog({
       title: "Replace all data?",
       body: `This backup has ${result.summary.trips} trip(s) and ${result.summary.templates} template(s). Importing replaces everything currently in the app. This can't be undone.`,
       confirmLabel: "Import & replace",
       danger: true,
     });
+    dbg(`dialog result: ${ok}`);
     if (!ok) return;
     save(result.data);
+    dbg("saved");
     announce("Backup imported.");
     navigate("trips");
   });
+}
+
+/** TEMP on-device diagnostic: shows import progress on-screen in the installed
+ *  iOS PWA (where there's no console). Remove once the import issue is fixed. */
+function dbg(msg) {
+  try {
+    let box = document.getElementById("import-dbg");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "import-dbg";
+      box.style.cssText =
+        "position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;" +
+        "background:#111;color:#0f0;font:12px/1.4 monospace;padding:8px 10px;" +
+        "border-radius:8px;max-height:40vh;overflow:auto;white-space:pre-wrap;" +
+        "box-shadow:0 2px 12px rgba(0,0,0,.5)";
+      box.addEventListener("dblclick", () => box.remove());
+      document.body.appendChild(box);
+    }
+    const t = new Date().toLocaleTimeString();
+    box.textContent += `[${t}] ${msg}\n`;
+    box.scrollTop = box.scrollHeight;
+  } catch (_) { /* no-op */ }
 }
 
 /** Read a File as text using FileReader (resilient on iOS standalone PWAs,
