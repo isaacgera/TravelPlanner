@@ -205,9 +205,24 @@ function initBackupMenu() {
 
   importFile.addEventListener("change", async () => {
     const file = importFile.files?.[0];
-    importFile.value = "";
     if (!file) return;
-    const text = await file.text();
+
+    let text;
+    try {
+      // Read via FileReader rather than file.text(). In an installed iOS PWA
+      // (standalone WebKit) the Files picker backgrounds the app, and the
+      // Blob.text() promise can silently never resolve on return; FileReader's
+      // event-based read survives the suspend/resume. Reset the input only
+      // AFTER the read so the File reference stays valid throughout.
+      text = await readFileText(file);
+    } catch (err) {
+      console.error("Travel Planner: import read failed.", err);
+      announce("Couldn't read that file. Try again, or re-save the backup to Files first.", true);
+      importFile.value = "";
+      return;
+    }
+    importFile.value = "";
+
     const result = parseImport(text);
     if (!result.ok) { announce(result.error, true); return; }
 
@@ -221,6 +236,22 @@ function initBackupMenu() {
     save(result.data);
     announce("Backup imported.");
     navigate("trips");
+  });
+}
+
+/** Read a File as text using FileReader (resilient on iOS standalone PWAs,
+ *  where Blob.text() can hang after the Files picker backgrounds the app). */
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error || new Error("FileReader failed"));
+    reader.onabort = () => reject(new Error("File read aborted"));
+    try {
+      reader.readAsText(file);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
