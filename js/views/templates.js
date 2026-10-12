@@ -1,8 +1,8 @@
 /* ============================================================
-   views/templates.js - reusable packing templates
+   views/templates.js - reusable checklist templates
    - Templates view (list / rename / delete)
-   - openSaveTemplate: save a trip's packing list as a template
-   - openApplyTemplate: replace a trip's packing list from a template
+   - openSaveTemplate: save a trip's checklist as a template
+   - openApplyTemplate: replace a trip's checklist from a template
    ============================================================ */
 
 import { load, update, uid, DEFAULT_CATEGORIES } from "../store.js";
@@ -133,7 +133,7 @@ export function renderTemplatesView(container, section = "all") {
   container.appendChild(el("div", { class: "view-head" }, [el("h2", { text: "Presets" })]));
 
   // On-screen switcher (primary control on mobile, where the sidebar sub-nav is hidden).
-  const segs = [["all", "All"], ["people", "\u{1F465} Travellers"], ["packing", "\u{1F9F3} Packing"]];
+  const segs = [["all", "All"], ["people", "\u{1F465} Travellers"], ["packing", "\u{1F9F3} Checklist"]];
   const segbar = el("div", { class: "seg", role: "group", "aria-label": "Preset sections" });
   segs.forEach(([key, label]) => {
     segbar.appendChild(
@@ -149,21 +149,21 @@ export function renderTemplatesView(container, section = "all") {
   // ---- Travellers (master list) ----------------------------
   if (s !== "packing") renderPeopleSection(container, data);
 
-  // ---- Packing presets -------------------------------------
+  // ---- Checklist presets -------------------------------------
   if (s !== "people") renderPackingSection(container, data);
 }
 
 function renderPackingSection(container, data) {
   container.appendChild(
     el("div", { id: "section-packing", class: "section-head", style: "display:flex;align-items:center;gap:.6rem;margin-top:1.5rem;scroll-margin-top:1rem" }, [
-      el("h3", { style: "margin:0", text: "Packing presets" }),
-      el("button", { class: "add-pill", type: "button", "aria-label": "Create a packing preset", title: "Create a packing preset", onclick: () => openPresetBuilder() }, [
+      el("h3", { style: "margin:0", text: "Checklist presets" }),
+      el("button", { class: "add-pill", type: "button", "aria-label": "Create a checklist preset", title: "Create a checklist preset", onclick: () => openPresetBuilder() }, [
         el("span", { "aria-hidden": "true", text: "Add " }),
         el("span", { class: "add-pill-plus", "aria-hidden": "true", text: "\uFF0B" }),
       ]),
     ])
   );
-  container.appendChild(el("p", { class: "meta", text: "Reusable packing lists you can apply to any trip. Create one here, or from a trip's packing list (Trip \u2192 Packing \u2192 Save as preset)." }));
+  container.appendChild(el("p", { class: "meta", text: "Reusable checklists you can apply to any trip. Create one here, or from a trip's checklist (Trip \u2192 Checklist \u2192 Save as preset)." }));
 
   if (!data.templates.length) {
     container.appendChild(stateBlock("\u{1F4CB}", "No presets yet. Tap Add to build one."));
@@ -197,7 +197,7 @@ function renderPackingSection(container, data) {
   container.appendChild(list);
 }
 
-/* ---- Build / edit a packing preset from scratch ----------- */
+/* ---- Build / edit a checklist preset from scratch ----------- */
 function openPresetBuilder(presetId) {
   const existing = presetId ? (load().templates || []).find((t) => t.id === presetId) : null;
   // Working copy. New presets seed the default categories (empty items).
@@ -213,7 +213,7 @@ function openPresetBuilder(presetId) {
 
   function draw() {
     clear(body);
-    body.appendChild(el("h3", { text: existing ? "Edit packing preset" : "New packing preset" }));
+    body.appendChild(el("h3", { text: existing ? "Edit checklist preset" : "New checklist preset" }));
 
     const nameInput = el("input", { type: "text", value: draft.name, placeholder: "Preset name (e.g. Beach weekend)", "aria-label": "Preset name", autocomplete: "off" });
     nameInput.addEventListener("input", () => { draft.name = nameInput.value; });
@@ -311,7 +311,7 @@ function openPresetBuilder(presetId) {
   draw();
 }
 
-/* ---- Save a trip's packing list as a template ------------- */
+/* ---- Save a trip's checklist as a template ------------- */
 export function openSaveTemplate(tripId) {
   const trip = load().trips.find((t) => t.id === tripId);
   if (!trip || !trip.packing.length) { announce("Nothing to save yet.", true); return; }
@@ -320,7 +320,7 @@ export function openSaveTemplate(tripId) {
   input.id = "tpl-name";
   const form = el("form", { class: "stack" }, [
     el("h3", { text: "Save as preset" }),
-    el("p", { class: "meta", text: "Saves this trip's categories and item names as a reusable packing list you can apply to future trips." }),
+    el("p", { class: "meta", text: "Saves this trip's categories and item names as a reusable checklist you can apply to future trips." }),
     el("div", { class: "field" }, [el("label", { for: "tpl-name", text: "Preset name" }), input]),
     el("div", { class: "modal-actions" }, [
       el("button", { class: "btn btn-ghost", type: "button", onclick: closeModal }, "Cancel"),
@@ -346,7 +346,7 @@ export function openSaveTemplate(tripId) {
   openModal(form);
 }
 
-/* ---- Apply a template to a trip (replaces the list) ------- */
+/* ---- Apply a template to a trip (replaces the checklist) ------- */
 export function openApplyTemplate(tripId, onDone) {
   const data = load();
   const trip = data.trips.find((t) => t.id === tripId);
@@ -358,7 +358,7 @@ export function openApplyTemplate(tripId, onDone) {
     list.appendChild(
       el("button", { class: "btn btn-block", type: "button", style: "justify-content:flex-start;text-align:left", onclick: async () => {
         if (trip.packing.length) {
-          const ok = await confirmDialog({ title: "Replace packing list?", body: `This replaces the current packing list with the "${tpl.name}" preset.`, confirmLabel: "Replace", danger: true });
+          const ok = await confirmDialog({ title: "Replace checklist?", body: `This replaces the current checklist with the "${tpl.name}" preset.`, confirmLabel: "Replace", danger: true });
           if (!ok) return;
         }
         update((d) => {

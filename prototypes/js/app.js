@@ -12,7 +12,7 @@ import { renderAboutView } from "./views/about.js";
 import { announce, confirmDialog } from "./ui.js";
 import { initPalette } from "./theme.js";
 
-export const APP_VERSION = "1.0.2-proto";
+export const APP_VERSION = "1.0.3-proto";
 
 const views = {
   trips: { el: document.getElementById("view-trips"), tab: "trips" },

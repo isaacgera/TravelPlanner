@@ -1,7 +1,7 @@
 /* ============================================================
    views/trip-detail.js
    Trip detail = Overview + combined Trip Days (itinerary+weather)
-   + Packing (with templates). Sub-tabs within the trip.
+   + Checklist (with templates). Sub-tabs within the trip.
    ============================================================ */
 
 import { load, update, uid, DEFAULT_CATEGORIES } from "../store.js";
@@ -44,7 +44,7 @@ export function renderTripDetail(container, tripId) {
   const sections = [
     ["overview", "Plan"],
     ["days", "Trip days"],
-    ["packing", "Packing"],
+    ["packing", "Checklist"],
     ["summary", "Itinerary"],
   ];
   const subnav = el("div", { class: "subnav", role: "group", "aria-label": "Trip sections", style: "display:flex;gap:.5rem;margin:1rem 0;flex-wrap:wrap" });
@@ -610,14 +610,14 @@ async function refreshAllWeather(trip) {
   rerender(trip.id);
 }
 
-/* ---- Packing ---------------------------------------------- */
+/* ---- Checklist ---------------------------------------------- */
 function renderPacking(body, trip) {
   const tools = el("div", { style: "display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem" });
   if (!trip.packing.length) {
     tools.appendChild(el("button", { class: "btn btn-sm btn-primary", type: "button", onclick: () => { seedDefaults(trip); } }, "Start a blank list (defaults)"));
     tools.appendChild(el("button", { class: "btn btn-sm", type: "button", onclick: () => openApplyTemplate(trip.id, () => rerender(trip.id)) }, "Start from a preset"));
     body.appendChild(tools);
-    body.appendChild(stateBlock("\u{1F9F3}", "No packing list yet. Start blank with default categories, or from a saved preset."));
+    body.appendChild(stateBlock("\u{1F9F3}", "No checklist yet. Start blank with default categories, or from a saved preset."));
     return;
   }
 
@@ -692,7 +692,7 @@ function renderPacking(body, trip) {
   body.appendChild(addCat);
 }
 
-/** Edit a packing item's label + quantity. */
+/** Edit a checklist item's label + quantity. */
 function openPackingItemEdit(tripId, item) {
   const labelInput = el("input", { type: "text", name: "label", value: item.label, placeholder: "Item", "aria-label": "Item name", autocomplete: "off" });
   labelInput.id = "edit-item-label";
@@ -960,7 +960,7 @@ function moveInArray(arr, from, to) {
  * reorderControls({ index, count, label, onMove }) → a small group of
  * visible Up/Down arrow buttons. Disabled at the ends. Keyboard-accessible
  * and touch-friendly (shared across Places, Flights, Accommodation, Trip Days
- * entries, and Packing items).
+ * entries, and Checklist items).
  */
 function reorderControls({ index, count, label, onMove }) {
   const upBtn = el("button", {
@@ -1080,107 +1080,330 @@ function downloadFile(att) {
 }
 
 /** Download the itinerary summary as PDF (desktop) or image (mobile). */
+/** Generate a text-based PDF of the itinerary summary using vendored jsPDF.
+ *  Returns a Blob (application/pdf). No html2canvas, no CDN — works offline.
+ *
+ *  Layout mirrors the old html2canvas-based PDF:
+ *  - Card header with left accent bar (trip name + subtitle)
+ *  - Section headings with coloured full-width underline
+ *  - Flights and accommodation as clean proportional text
+ *  - Day-by-day itinerary in a two-column layout (date left, entries right)
+ *    with subtle row separators between days
+ *
+ *  IMPORTANT: jsPDF's built-in Helvetica only covers WinAnsiEncoding (roughly
+ *  Latin-1). Unicode symbols like arrows, check-boxes, em-dashes, and bullets
+ *  fall back to a wide/monospaced glyph. So we use only ASCII-safe substitutes. */
+function generateItineraryPdf(trip) {
+  if (!window.jspdf || !window.jspdf.jsPDF) throw new Error("jsPDF library not loaded");
+  const jsPDF = window.jspdf.jsPDF;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const PW = doc.internal.pageSize.getWidth();   // 210
+  const PH = doc.internal.pageSize.getHeight();  // 297
+  const MX = 16;                                  // side margins (generous)
+  const CW = PW - MX * 2;                        // content width ~178
+  const FOOTER_H = 12;                            // reserved for page footer
+  let y = 18;                                     // starting cursor (top breathing room)
+
+  // Colours (RGB arrays)
+  const C_PRIMARY = [15, 138, 126];   // teal accent
+  const C_TEXT    = [30, 41, 59];
+  const C_MUTED   = [100, 116, 139];
+  const C_BORDER  = [203, 213, 225];
+  const C_ACCENT  = [139, 105, 20];   // gold for day headings
+  const C_BG_CARD = [248, 250, 252];  // very light grey card background
+
+  // Date column width for the itinerary two-column layout
+  const DATE_COL = 30; // mm — slightly wider for relaxed feel
+
+  // ---- date helpers (ASCII-safe, no Unicode) ----
+  function pdfDate(iso, style) {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    if (isNaN(d)) return iso;
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    if (style === "short") return days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate();
+    if (style === "long") {
+      const wk = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      return wk[d.getDay()] + ", " + d.getDate() + " " + months[d.getMonth()];
+    }
+    return days[d.getDay()] + " " + d.getDate() + " " + months[d.getMonth()];
+  }
+  function pdfRange(s, e) {
+    if (!s && !e) return "Dates not set";
+    if (s && e) return pdfDate(s) + " - " + pdfDate(e);
+    return pdfDate(s || e);
+  }
+
+  // ---- layout helpers ----
+  function ensureSpace(needed) {
+    if (y + needed > PH - FOOTER_H) {
+      doc.addPage();
+      y = 18;
+    }
+  }
+
+  /** Section heading: bold text with a coloured full-width underline. */
+  function sectionHead(text) {
+    ensureSpace(16);
+    y += 4;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+    doc.setTextColor(...C_PRIMARY);
+    doc.text(text, MX, y);
+    y += 2;
+    doc.setDrawColor(...C_PRIMARY); doc.setLineWidth(0.5);
+    doc.line(MX, y, MX + CW, y);
+    y += 6;
+  }
+
+  /** Draw body text that auto-wraps within the given width. */
+  function bodyText(text, opts = {}) {
+    var size = opts.size || 10;
+    var style = opts.bold ? "bold" : "normal";
+    var color = opts.color || C_TEXT;
+    var maxW = opts.maxW || CW;
+    var x = opts.x || MX;
+    doc.setFont("helvetica", style); doc.setFontSize(size);
+    doc.setTextColor(...color);
+    var lines = doc.splitTextToSize(text, maxW);
+    var lineH = size * 0.45;  // relaxed line height
+    var blockH = lines.length * lineH;
+    ensureSpace(blockH + 2);
+    doc.text(lines, x, y);
+    y += blockH;
+    return blockH;
+  }
+
+  // ===================================================================
+  // HEADER CARD — left accent bar, trip name, subtitle
+  // ===================================================================
+  var headerStartY = y;
+
+  // Trip name (larger, bold)
+  doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+  doc.setTextColor(...C_TEXT);
+  doc.text(trip.name || "Trip Itinerary", MX + 5, y + 2);
+
+  // Subtitle: country + date range
+  var subtitle = (trip.country?.name ? trip.country.name + " - " : "") + pdfRange(trip.startDate, trip.endDate);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.setTextColor(...C_MUTED);
+  doc.text(subtitle, MX + 5, y + 8);
+
+  // Card frame and left accent bar
+  var cardH = 15;
+  doc.setDrawColor(...C_BORDER); doc.setLineWidth(0.3);
+  doc.roundedRect(MX, headerStartY - 4, CW, cardH, 1.5, 1.5, "S");
+  doc.setDrawColor(...C_PRIMARY); doc.setLineWidth(2);
+  doc.line(MX + 0.5, headerStartY - 3, MX + 0.5, headerStartY - 4 + cardH - 1);
+
+  y = headerStartY + cardH + 4;
+
+  // ===================================================================
+  // PLACES COVERED + TRAVELLERS
+  // ===================================================================
+  var places = (trip.places || []).map(function(p) { return p.name; }).filter(Boolean);
+  if (places.length) {
+    bodyText("Places covered: " + places.join(", "), { bold: true, size: 10 });
+    y += 3;
+  }
+  if ((trip.travellers || []).length) {
+    bodyText("Travellers: " + trip.travellers.join(", "), { bold: true, size: 10 });
+    y += 3;
+  }
+
+  // ===================================================================
+  // FLIGHTS — ASCII arrow (->) instead of Unicode
+  // ===================================================================
+  var flights = trip.flights || [];
+  if (flights.length) {
+    sectionHead("Flights");
+    flights.forEach(function(fl) {
+      var label = fl.label ? fl.label + ": " : "";
+      var route = (fl.from || "?") + " -> " + (fl.to || "?");
+      var flNo = fl.flightNo ? " (" + fl.flightNo + ")" : "";
+      var dt = fl.date ? " -- " + pdfDate(fl.date) : "";
+      var dep = fl.depTime ? ", dep " + fl.depTime : "";
+      var arr = fl.arrTime ? ", arr " + fl.arrTime : "";
+      bodyText(label + route + flNo + dt + dep + arr, { size: 10 });
+      y += 2;
+    });
+    y += 2;
+  }
+
+  // ===================================================================
+  // ACCOMMODATION — name, city, dates; notes on a muted sub-line
+  // ===================================================================
+  var stays = trip.stays || [];
+  if (stays.length) {
+    sectionHead("Accommodation");
+    stays.forEach(function(st) {
+      var city = st.city ? ", " + st.city : "";
+      var cin = st.checkIn ? " -- in " + pdfDate(st.checkIn) : "";
+      var cout = st.checkOut ? ", out " + pdfDate(st.checkOut) : "";
+      bodyText(st.name + city + cin + cout, { size: 10 });
+      if (st.notes) {
+        y += 0.5;
+        bodyText(st.notes, { size: 9, color: C_MUTED });
+      }
+      y += 2;
+    });
+    y += 2;
+  }
+
+  // ===================================================================
+  // DAY-BY-DAY ITINERARY — two-column: date left, entries right
+  // Matches the old html2canvas PDF layout with row separators.
+  // ===================================================================
+  var dayIsos = [];
+  if (trip.startDate) {
+    var s = new Date(trip.startDate + "T00:00:00");
+    var e = trip.endDate ? new Date(trip.endDate + "T00:00:00") : s;
+    if (!isNaN(s)) {
+      var cur = new Date(s);
+      var guard = 0;
+      while (cur <= e && guard < 366) {
+        var yy = cur.getFullYear();
+        var mm = String(cur.getMonth() + 1).padStart(2, "0");
+        var dd = String(cur.getDate()).padStart(2, "0");
+        dayIsos.push(yy + "-" + mm + "-" + dd);
+        cur.setDate(cur.getDate() + 1);
+        guard++;
+      }
+    }
+  }
+
+  if (dayIsos.length) {
+    sectionHead("Itinerary");
+
+    var entryX = MX + DATE_COL;      // entries column start
+    var entryW = CW - DATE_COL;      // entries column width
+    var lineH = 4.5;                  // relaxed line height for entries
+
+    dayIsos.forEach(function(iso, idx) {
+      var dayObj = (trip.itinerary || []).find(function(d) { return d.date === iso; });
+      var entries = dayObj?.entries || [];
+      var dateLabel = pdfDate(iso, "short");
+
+      // Estimate block height for this day
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
+      var blockH = 5; // date label height
+      if (entries.length) {
+        entries.forEach(function(text) {
+          var wrapped = doc.splitTextToSize(text, entryW - 4);
+          blockH += wrapped.length * lineH;
+        });
+      } else {
+        blockH += lineH;
+      }
+      blockH += 4; // bottom padding
+
+      ensureSpace(blockH + 4);
+
+      // Separator line between days (not before the first)
+      if (idx > 0) {
+        doc.setDrawColor(...C_BORDER); doc.setLineWidth(0.2);
+        doc.line(MX, y, MX + CW, y);
+        y += 4;
+      }
+
+      // Date label (left column) — accent colour, slightly larger
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+      doc.setTextColor(...C_ACCENT);
+      doc.text(dateLabel, MX, y);
+
+      // Entries (right column)
+      if (entries.length) {
+        entries.forEach(function(text) {
+          doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
+          doc.setTextColor(...C_TEXT);
+          var wrapped = doc.splitTextToSize(text, entryW - 4);
+          doc.text(wrapped, entryX, y);
+          y += wrapped.length * lineH;
+        });
+      } else {
+        doc.setFont("helvetica", "italic"); doc.setFontSize(9);
+        doc.setTextColor(...C_MUTED);
+        doc.text("(no plans yet)", entryX, y);
+        y += lineH;
+      }
+      y += 3;
+    });
+    y += 3;
+  }
+
+  // ===================================================================
+  // PAGE FOOTERS — "Travel Planner" left, "Page X of Y" right, all pages
+  // ===================================================================
+  var totalPages = doc.internal.getNumberOfPages();
+  for (var i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(7);
+    doc.setTextColor(...C_MUTED);
+    doc.text("Travel Planner", MX, PH - 7);
+    doc.text("Page " + i + " of " + totalPages, PW - MX, PH - 7, { align: "right" });
+  }
+
+  return doc.output("blob");
+}
+
+/** Adaptive export: generate text-based PDF, then share (mobile) or download (desktop).
+ *  Falls back gracefully if anything fails. Mirrors the ShiftPlanner v4.4.0 pattern. */
 async function saveSummary(trip) {
   const btn = document.getElementById("save-summary-btn");
   const resetBtn = () => { if (btn) { btn.disabled = false; btn.textContent = "\u{1F4BE} Save / Export"; } };
-  const isMobile = window.innerWidth < 720;
-  const filename = `${(trip.name || "trip").replace(/[^a-z0-9 _-]/gi, "")}-itinerary-${new Date().toISOString().slice(0, 10)}`;
+  const filename = `${(trip.name || "trip").replace(/[^a-z0-9 _-]/gi, "")}-itinerary-${new Date().toISOString().slice(0, 10)}.pdf`;
 
-  if (btn) { btn.disabled = true; btn.textContent = isMobile ? "Converting\u2026" : "Generating\u2026"; }
+  if (btn) { btn.disabled = true; btn.textContent = "Generating\u2026"; }
 
+  let blob;
   try {
-    const summary = document.querySelector(".summary");
-    if (!summary) { announce("Could not find the itinerary to export.", true); resetBtn(); return; }
-
-    // Load html2canvas (needed for both paths)
-    await ensureScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
-    if (typeof window.html2canvas !== "function") throw new Error("html2canvas failed to load.");
-
-    const canvas = await window.html2canvas(summary, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      useCORS: true,
-      logging: false,
-    });
-
-    if (isMobile) {
-      // Mobile: export as JPEG image
-      canvas.toBlob((blob) => {
-        if (!blob) { announce("Could not generate the image.", true); resetBtn(); return; }
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${filename}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        announce("Itinerary exported as image.");
-        resetBtn();
-      }, "image/jpeg", 0.92);
-    } else {
-      // Desktop: export as multi-page PDF
-      // jsPDF UMD attaches as window.jspdf (lowercase), the constructor is window.jspdf.jsPDF
-      await ensureScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
-      const JsPDFCtor = window.jspdf?.jsPDF;
-      if (!JsPDFCtor) throw new Error("jsPDF failed to load.");
-
-      const pdf = new JsPDFCtor({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 10;                             // mm each side
-      const usableW = pageW - margin * 2;            // ~190 mm on A4
-      const usableH = pageH - margin * 2;            // ~277 mm on A4
-
-      // Scale the captured canvas to fit the usable width
-      const imgW = usableW;
-      const imgH = (canvas.height * usableW) / canvas.width;
-
-      // If it fits on one page, just add it
-      if (imgH <= usableH) {
-        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, imgW, imgH);
-      } else {
-        // Slice the canvas into page-sized chunks and add one per page
-        const pxPerPage = (canvas.width * usableH) / usableW; // canvas-px height per PDF page
-        let srcY = 0;
-        let page = 0;
-
-        while (srcY < canvas.height) {
-          const sliceH = Math.min(pxPerPage, canvas.height - srcY);
-          // Draw a slice of the source canvas onto a temporary canvas
-          const slice = document.createElement("canvas");
-          slice.width = canvas.width;
-          slice.height = sliceH;
-          const ctx = slice.getContext("2d");
-          ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-
-          if (page > 0) pdf.addPage();
-          const sliceImgH = (sliceH * usableW) / canvas.width;
-          pdf.addImage(slice.toDataURL("image/png"), "PNG", margin, margin, imgW, sliceImgH);
-
-          srcY += sliceH;
-          page++;
-        }
-      }
-
-      pdf.save(`${filename}.pdf`);
-      announce("Itinerary exported as PDF.");
-      resetBtn();
-    }
+    blob = generateItineraryPdf(trip);
   } catch (err) {
-    announce(`Could not export: ${err.message}`, true);
+    announce(`Could not generate PDF: ${err.message}`, true);
     resetBtn();
+    return;
   }
+
+  // Build a File object for the share API (may not be supported on older browsers)
+  let file = null;
+  try { file = new File([blob], filename, { type: "application/pdf" }); } catch (e) { /* older browsers */ }
+
+  // Mobile / touch (incl. installed iPhone PWA) → native share sheet
+  // Desktop → straight download
+  if (isMobileDevice() && file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+    navigator.share({ files: [file], title: filename.replace(/\.pdf$/, "") }).then(() => {
+      announce("Itinerary shared.");
+    }).catch((err) => {
+      if (err && err.name === "AbortError") { /* user cancelled */ }
+      else { downloadBlob(blob, filename); announce("Itinerary saved as PDF."); }
+    });
+    resetBtn();
+    return;
+  }
+
+  // Desktop (or no file-share support) → download
+  downloadBlob(blob, filename);
+  announce("Itinerary saved as PDF.");
+  resetBtn();
 }
 
-/** Load a CDN script once (de-duped). */
-function ensureScript(src) {
-  if (document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error(`Failed to load ${src}`));
-    document.head.appendChild(s);
-  });
+/** Detect mobile/touch devices for export routing (same heuristic as ShiftPlanner). */
+function isMobileDevice() {
+  try {
+    if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches && !window.matchMedia("(pointer: fine)").matches) return true;
+  } catch (e) { /* */ }
+  return /Android|iPhone|iPad|iPod|Mobile|Silk|Kindle|BlackBerry|Opera Mini|IEMobile/i.test(navigator.userAgent || "");
+}
+
+/** Download a blob to the user's device via an object URL. */
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
 }

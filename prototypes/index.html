@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f8a7e" />
-  <meta name="description" content="Travel Planner PROTOTYPE - sandbox for testing new features before porting to the live app. Uses isolated tpproto_ storage." />
+  <meta name="description" content="Travel Planner PROTOTYPE - sandbox for testing new features before porting to the live app. Uses isolated tpproto_ storage. Includes checklists, itinerary, weather." />
   <title>Travel Planner — PROTOTYPE</title>
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
@@ -29,7 +29,7 @@
 
   <div class="proto-banner" role="note" aria-label="Prototype build notice">
     <span class="proto-tag">PROTOTYPE</span>
-    <span>Sandbox build (v1.0.2-proto) — isolated data, not the live app</span>
+    <span>Sandbox build (v1.0.3-proto) — isolated data, not the live app</span>
   </div>
 
   <div class="app">
@@ -54,7 +54,7 @@
       <h1 class="sr-only">Travel Planner (Prototype)</h1>
       <section id="view-trips" class="view" aria-label="Trips"></section>
       <section id="view-trip" class="view" aria-label="Trip detail" hidden></section>
-      <section id="view-templates" class="view" aria-label="Packing templates" hidden></section>
+      <section id="view-templates" class="view" aria-label="Checklist templates" hidden></section>
       <section id="view-personalization" class="view" aria-label="Personalization" hidden></section>
       <section id="view-about" class="view" aria-label="About" hidden></section>
     </main>
@@ -108,9 +108,9 @@
               <span class="tab-icon" aria-hidden="true">&#128101;</span>
               <span class="tab-label">Travellers</span>
             </button>
-            <button class="subtab" data-nav="templates" data-section="packing" type="button" title="Packing presets">
+            <button class="subtab" data-nav="templates" data-section="packing" type="button" title="Checklist presets">
               <span class="tab-icon" aria-hidden="true">&#129530;</span>
-              <span class="tab-label">Packing lists</span>
+              <span class="tab-label">Checklist</span>
             </button>
           </div>
         </div>
@@ -159,6 +159,8 @@
   <!-- Modal host -->
   <div id="modal-root" class="modal-root" hidden></div>
 
+  <!-- Vendored jsPDF (no CDN, offline-ready) — loaded before app.js so window.jspdf is available -->
+  <script src="vendor/jspdf.umd.min.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
