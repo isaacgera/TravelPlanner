@@ -1,6 +1,10 @@
 ﻿# Travel Planner — Design
 
-- **Category:** Home | **Tier:** Medium | **Status:** Built (v1.0.1 shipped) — §3 data model and §7 UI reflect as-built
+- **Category:** Home | **Tier:** Medium | **Status:** Built (v1.0.3 shipped) — §3 data model and §7 UI reflect as-built
+- **Terminology note (v1.0.3):** the user-facing "Packing" feature was relabelled **"Checklist"**
+  across the UI. The internal `trip.packing[]` data field and function names are unchanged (so
+  existing data/backups load untouched) — this doc keeps the `packing` field name in §3 for that
+  reason, while UI-facing references read "Checklist".
 
 ## 1. Approach
 A single-page, local-first PWA in vanilla HTML/CSS/JS (no build step), consistent with the
@@ -108,13 +112,13 @@ storage so it never collides with other family apps.
 - Export/import JSON is the backup path; validate on import; keep format
   backward-compatible if it evolves (migrate, don't break).
 
-## 7. UI/UX (as built, v1.0.0)
+## 7. UI/UX (as built, v1.0.3)
 - **Shell:** mobile-first. Below 720px a **bottom tab bar** (Trips · Presets · Personalize ·
   About) + a slim top bar (brand + light/dark toggle). At ≥720px it becomes a **left sidebar**
   (brand, nav with filtering sub-navs, and a footer holding the theme toggle + Forjé credit).
 - **Sidebar behaviour:** each top-level tab (Trips, Presets, Personalize) has a **sub-nav** that
   reveals on hover/focus and **filters the main screen** to the chosen section (e.g. Trips →
-  Domestic/International; Presets → Travellers/Packing lists; Personalize → Appearance/Data).
+  Domestic/International; Presets → Travellers/Checklist; Personalize → Appearance/Data).
   Every view also renders an equivalent on-screen **segmented switcher** so the same filtering
   works on mobile where the sub-nav is hidden. Sidebar is **collapsible** to an icon rail via an
   edge chevron; collapsing zooms the content up a notch (root font-size) for a larger view.
@@ -123,16 +127,19 @@ storage so it never collides with other family apps.
     (India as base), each an `.entity-card` with a status badge (Planning / Upcoming / In
     progress / Completed).
   - **Trip detail** — sub-sections Plan (country, cities, travellers, flights, accommodation,
-    notes, **attachments**), **Trip Days** (combined itinerary + per-city weather), Packing
-    (categorised checklist, manual add, save/apply preset), and **Itinerary** (printable
-    summary with adaptive **Save/Export**: PDF on desktop via html2canvas + jsPDF, JPEG on
-    mobile via html2canvas).
-  - **Presets** — master **Travellers** list + reusable **Packing presets** (buildable from
+    notes, **attachments**), **Trip Days** (combined itinerary + per-city weather), **Checklist**
+    (categorised list, manual add, save/apply preset), and **Itinerary** (printable
+    summary with adaptive **Save/Export**, v1.0.3: a **vendored, text-based jsPDF** generator —
+    no CDN, works offline; mobile/touch hands the PDF to `navigator.share({files})`, desktop
+    downloads it. Replaced the earlier html2canvas screenshot approach (smaller ~30-80 KB output,
+    crisp selectable text). Uses ASCII-safe glyphs because jsPDF's built-in Helvetica is
+    WinAnsi-only. Checklist is intentionally excluded from the export).
+  - **Presets** — master **Travellers** list + reusable **Checklist presets** (buildable from
     scratch or saved from a trip). All shown as consistent `.entity-cards`.
   - **Personalize** — **Appearance** (11 colour palettes + Custom, with a contrast guard) and
     **Data** (Export/Import backup).
   - **About** — app info + tips.
-- **Consistent cards:** trips, travellers and packing presets share one `.entity-card` style
+- **Consistent cards:** trips, travellers and checklist presets share one `.entity-card` style
   (2-column grid, coloured left accent bar, hover lift).
 - **Theming:** light/dark via `data-theme` + `prefers-color-scheme` (smooth faded switch); a
   palette system of 11 presets + Custom applied through CSS custom properties, each with a

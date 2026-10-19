@@ -1,6 +1,6 @@
 ﻿# Travel Planner — Tasks
 
-- **Status:** In Progress (Option A build starting)
+- **Status:** Built (v1.0.3 shipped)
 
 ## Planning (done)
 - [x] Agree v1 scope (family/friends framing; travellers as names; itinerary;
@@ -25,13 +25,13 @@
 - [x] Weather: daily forecast per city; cache per city; graceful out-of-range + offline
 - [x] Weather: explanatory banner when trip is beyond the 16-day horizon
 - [x] PWA: manifest + service worker (cache app shell)
-- [ ] PWA: PNG icons (192 / 512 / maskable-512) — only icon.svg exists so far; installability gap
-- [ ] Accessibility + responsive pass (Pre-Live Testing Agent) — incl. contrast on sidebar/hero
+- [x] PWA: PNG icons (192 / 512 / maskable-512) — added Session 4 via canvas generator
+- [x] Accessibility + responsive pass (Pre-Live Testing Agent) — run twice Session 4, all fixed
 - [x] Verify: Isaac live browser smoke-test (drove Session 3 fixes)
-- [ ] Docs: refresh userguide.html, overview.html for new features/terminology; SPEC-design.md
-- [x] MIT LICENSE (Isaac A Gera); README + changelog; version constant (1.0.0)
-- [ ] Run PWA Readiness Checker
-- [ ] Update Ideas.md status -> Built (with version) — after icons + audits
+- [x] Docs: refresh userguide.html, overview.html for new features/terminology; SPEC-design.md
+- [x] MIT LICENSE (Isaac A Gera); README + changelog; version constant
+- [x] Run PWA Readiness Checker (Session 4 — only blocker was icons, since resolved)
+- [x] Update Ideas.md status -> Built (with version)
 
 ### Session 3 additions (done)
 - [x] Rename Templates -> Presets across UI
@@ -46,3 +46,29 @@
 - [x] Scaffold `experiments/svelte-version/` (Vite + Svelte 5) — flagged Node/Windows tooling; Node v24.21.0 installed, Zscaler proxy cert handled via `NODE_EXTRA_CA_CERTS`
 - [x] Reimplement the same spec; capture DX/bundle-size learnings vs Option A
 - [x] Comparison note (kept separate from the shipped app's docs) → `experiments/svelte-version/COMPARISON.md`
+
+## Post-v1 releases
+
+### v1.0.1 (Session 5) — done
+- [x] Trip attachments (upload/view/download, image lightbox, PDF open, 5MB Base64 cap)
+- [x] Trip Days date off-by-one fix (local ISO, not UTC)
+
+### v1.0.2 (Sessions 6-8) — done
+- [x] "Cities" → "Places Covered"; Edit + Reorder for Places / Flights / Accommodation
+- [x] Trip Days "Day N: Weekday, Date" headers; Edit + Reorder for itinerary entries
+- [x] Weather last-day UTC-shift fix (format from local components)
+- [x] Packing item Edit + Reorder
+- [x] Reorder UX (keyboard-accessible ↑/↓, 44px touch targets, disabled at ends)
+- [x] Version badge moved to sidebar footer; sticky full-height sidebar
+- [x] iOS PWA data-import fix (FileReader instead of Blob.text())
+
+### v1.0.3 (Session 9) — done
+- [x] "Packing" → "Checklist" rename across all user-facing UI (data field unchanged)
+- [x] Itinerary PDF export rewritten: vendored jsPDF, text-based, offline (no CDN)
+- [x] ASCII-safe glyphs (jsPDF Helvetica can't render Unicode arrows/checkboxes/em-dashes)
+- [x] Adaptive delivery: native share sheet on mobile, download on desktop
+- [x] Relaxed/airy layout matching the original PDF; checklist excluded from export
+- [x] Version → 1.0.3; SW cache → travel-planner-v1.0.3-1; vendor added to APP_SHELL
+- [x] Prototype-first in prototypes/ (tpproto_), then ported to live + pushed to GitHub Pages
+- [x] Ideas.md → Built (Travel Planner v1.0.3); repo tidied + in sync
+- [x] Real-device verify: installed-iPhone-PWA PDF share — confirmed working by Isaac (12 Oct 2026)

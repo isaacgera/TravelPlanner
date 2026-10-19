@@ -2,16 +2,18 @@
 
 - **Category:** Home
 - **Complexity tier:** Medium
-- **Status:** Built — v1.0.0 shipped (GitHub Pages, verified on mobile). Reflects as-built.
-- **App name:** Travel Planner (packing lists remain a headline feature; the app was
+- **Status:** Built — v1.0.3 shipped (GitHub Pages, verified on desktop; installed-iPhone-PWA
+  PDF-share check pending). Reflects as-built.
+- **App name:** Travel Planner (checklists remain a headline feature; the app was
   renamed from "Travel Planner + Packing List" for a tidier name).
 - **Terminology note:** the master people list is labelled **"Travellers"** in the UI; the
-  reusable packing checklists are labelled **"Presets"**. (Internal code/storage keys still
-  use `people` / `templates`, but all user-facing text says Travellers / Presets.)
+  per-trip packing feature and its reusable presets are labelled **"Checklist"** (relabelled from
+  "Packing" in v1.0.3). (Internal code/storage keys still use `people` / `templates` / `packing`,
+  but all user-facing text says Travellers / Checklist / Presets.)
 
 ## 1. Product Overview
 A local-first, installable PWA for planning **family/friends trips**: capture trip
-details and who's coming, plan a day-by-day itinerary, build reusable packing checklists,
+details and who's coming, plan a day-by-day itinerary, build reusable checklists,
 and see the weather for each city on the trip. Everything is stored on the device;
 the only thing that ever leaves it is the city name/coordinates sent to a keyless
 weather API to fetch a forecast.
@@ -24,15 +26,17 @@ weather API to fetch a forecast.
 - **Itinerary:** day-by-day entries (a day → activities/notes) across the trip's date range,
   shown in a **combined "trip days" view** alongside that day's weather.
 - **Flights & accommodation:** optional flight legs and stays recorded against the trip.
-- **Packing lists:** items grouped by category, with check-off and quantity. Ship sensible
+- **Checklist:** items grouped by category, with check-off and quantity. Ship sensible
   **default categories** (Clothes, Toiletries, Documents, Tech, Health/Meds, Misc) with the
-  ability to **manually add categories and items**.
-- **Reusable presets:** save a packing list as a named **preset** (e.g. "Beach weekend",
+  ability to **manually add categories and items**. (Labelled "Packing" before v1.0.3.)
+- **Reusable presets:** save a checklist as a named **preset** (e.g. "Beach weekend",
   "Business trip"), build one from scratch, and start a new trip's list from a preset.
 - **Weather:** **per-city** **daily** forecast for the trip dates via Open-Meteo
   (keyless), with a city → coordinates geocoding lookup. Each city's forecast is cached
   for offline; a graceful fallback when the trip is outside forecast range.
-- **Itinerary summary:** a clean, printable one-page trip summary.
+- **Itinerary summary:** a clean, printable one-page trip summary with an adaptive
+  **Save/Export** (v1.0.3: vendored text-based jsPDF — offline, no CDN; native share sheet on
+  mobile, download on desktop).
 - **Appearance:** light/dark theme plus a choice of colour themes (11 presets + a Custom
   option), persisted per device.
 - **Backup:** export/import the whole dataset as JSON.

@@ -2,9 +2,9 @@
 
 - **Category:** Home
 - **Complexity tier:** Medium
-- **Status:** Built (v1.0.1 shipped)
+- **Status:** Built (v1.0.3 shipped)
 - **Description:** Plan family/friends trips: trip + travellers, one country with multiple
-  cities, combined day-by-day itinerary + per-city weather, reusable packing checklists.
+  cities, combined day-by-day itinerary + per-city weather, reusable checklists.
 - **Scope (v1):** Trip details, travellers (names), country + cities, combined
   itinerary/weather, packing lists + reusable templates, per-city Open-Meteo weather,
   export/import. Vanilla no-build PWA.
@@ -875,3 +875,86 @@ nav-list scroll), `js/app.js` (FileReader import fix + version bump already pres
 ### Status
 **Built (Travel Planner v1.0.2)** — v1.0.2 shipped to GitHub Pages; iOS PWA import regression
 fixed and verified on the real iPhone. Final clean build pending push.
+
+---
+
+## Session 9 — 12 Oct 2026 — v1.0.3 release: Checklist rename + text-based PDF export
+**Prototype-first iteration on two user requests, then ported to the live app, shipped to
+GitHub Pages, and tidied the repo. Verified on desktop by Isaac; real-device iPhone PWA check
+is the one remaining open item.**
+
+### What changed (two features)
+1. **"Packing" → "Checklist" rename (UI only).** Every user-facing "Packing" label is now
+   "Checklist" — sidebar sub-nav ("Packing lists" → "Checklist"), the in-trip sub-tab, the
+   Presets segment + section heading, empty states, Tips, and dialog copy. The underlying
+   `trip.packing[]` data field and internal function names (`renderPacking`, etc.) were left
+   unchanged on purpose — renaming the storage key would break existing trip data for zero
+   user benefit. No data migration needed; existing backups load unchanged.
+2. **Itinerary PDF export rewritten** — replaced the old html2canvas screenshot approach with
+   a **vendored, text-based jsPDF generator** (`generateItineraryPdf()`):
+   - **No CDN** — `vendor/jspdf.umd.min.js` is committed locally and precached by the SW, so
+     export works fully offline (honours the no-CDN rule; mirrors the ShiftPlanner v4.4.0 pattern).
+   - **Much smaller + crisper output:** ~30-80 KB text-based PDF vs the old ~1-3 MB
+     screenshot-in-PDF. Clean selectable text, not a bitmap.
+   - **Adaptive delivery:** mobile/touch (incl. installed iPhone PWA) → `navigator.share({files})`
+     native share sheet; desktop → straight download. Graceful fallback if generation fails.
+   - **Layout** deliberately mirrors the old PDF: card header with teal left-accent bar, teal
+     section underlines, two-column day-by-day itinerary (date left, entries right) with row
+     separators, flights/accommodation as clean text, "Page X of Y" footer.
+   - **Checklist section intentionally excluded** from the export (the old PDF didn't have it;
+     Isaac confirmed it's not wanted there).
+
+### Key implementation notes / gotchas
+- **jsPDF Helvetica = WinAnsi only.** jsPDF's built-in font can't render Unicode arrows,
+  check-boxes, em-dashes or bullets — they come out as wide monospaced glyphs. So the generator
+  uses **ASCII-safe substitutes throughout** (`->` for arrows, `--` for em-dashes, no bullet
+  glyphs). This was the root cause of an early "compressed/monospaced-looking" draft.
+- **"Relaxed" spacing pass:** after the first port looked cramped, bumped margins (16mm), font
+  sizes (10pt body / 12pt headings / 18pt title), line heights and inter-section gaps so the
+  two-page output breathes like the original.
+
+### Prototype-first workflow
+- Iterated entirely in `prototypes/` (isolated `tpproto_` storage, proto banner, no SW) until
+  Isaac signed off, then ported the finalised code to the live app in one pass. Prototype bumped
+  to `1.0.3-proto` during iteration.
+
+### Ported to live + release chores
+- `js/views/trip-detail.js`: Checklist labels + the new `generateItineraryPdf()`,
+  `saveSummary()` (adaptive share/download), `isMobileDevice()`, `downloadBlob()`; removed the
+  old html2canvas/`ensureScript()` CDN path.
+- `js/views/templates.js`, `js/views/about.js`, `index.html`: Checklist rename.
+- `index.html`: added `<script src="vendor/jspdf.umd.min.js">` before `app.js`; sidebar footer
+  version → v1.0.3.
+- `js/app.js`: `APP_VERSION` → `"1.0.3"`.
+- `sw.js`: `CACHE_NAME` → `travel-planner-v1.0.3-1`; added `./vendor/jspdf.umd.min.js` to
+  `APP_SHELL` so the library is precached for offline.
+- `vendor/jspdf.umd.min.js`: new (≈360 KB), copied from ShiftPlanner's vendored copy.
+- `Ideas.md`: row → **Built (Travel Planner v1.0.3)** after Isaac's sign-off; description/scope
+  "packing" → "checklist".
+
+### Git / publish
+- Committed on a `release/v1.0.3` branch, pushed, then merged to `main` and pushed →
+  GitHub Pages (`isaacgera/TravelPlanner`). Local `main` and `origin/main` are in sync on the
+  v1.0.3 commit; the release branch was deleted both locally and on the remote. Working tree clean.
+
+### Gotcha for next time — OneDrive + git locks
+Because the repo lives inside a **OneDrive-synced** folder, git operations that delete ref
+directories (branch delete, some checkouts, `gc`) intermittently hit **OneDrive file locks** and
+drop into an interactive `y/n` "deletion of directory failed" loop that can wedge the shell.
+**Fix that worked:** pause OneDrive syncing, then run the single git command cleanly (e.g.
+`git gc --prune=now`), and verify with `git status` / `git fsck`. Avoid firing parallel git/file
+commands while one is mid-operation. Noting here so we reach for the OneDrive-pause first next time.
+
+### Verified
+- Desktop (Isaac): Checklist labels everywhere; Save/Export produces the relaxed text-based PDF
+  matching the old layout; version reads v1.0.3.
+- Diagnostics clean (editor language server; Node not used for the shipped no-build app).
+- **Open — real-device check:** the definitive test of the new export on the **installed iPhone
+  PWA** (share sheet hands off the PDF) must be done on the phone after the Pages deploy + a full
+  close/reopen so the new SW (`...v1.0.3-1`) activates. Per the iOS-PWA rule, desktop proves the
+  mechanism but not the installed-PWA share path.
+
+### Status
+**Built (Travel Planner v1.0.3)** — shipped to GitHub Pages; repo tidy and in sync.
+**Real-device check complete:** Isaac confirmed the new text-based PDF export works correctly on
+the installed iPhone PWA (share sheet hands off the PDF as expected). No open items remain.
